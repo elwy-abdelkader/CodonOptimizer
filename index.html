@@ -371,7 +371,31 @@
 
   .info-note { font-size: 11px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; }
 
-  /* ── COPY FLASH ── */
+  /* ── STRATEGY INFO BOX ── */
+  .strategy-info {
+    margin-top: 8px;
+    background: var(--teal-bg); border: 0.5px solid var(--teal-border);
+    border-radius: var(--radius-md); padding: 9px 12px;
+    font-size: 11px; color: var(--teal-text); line-height: 1.6;
+    display: none;
+  }
+  .strategy-info.show { display: block; }
+  .strategy-info strong { font-weight: 500; }
+
+  .stat-item-restrict { min-width: 0; }
+  .restrict-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .restrict-chip {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 20px;
+    background: var(--red-bg); border: 0.5px solid var(--red-border);
+    color: var(--red-label); white-space: nowrap;
+  }
+  .restrict-chip-ok {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 20px;
+    background: var(--teal-bg); border: 0.5px solid var(--teal-border);
+    color: var(--teal-text); white-space: nowrap;
+  }
   @keyframes flashGreen { 0% { outline: 2px solid var(--teal-dot); } 100% { outline: 2px solid transparent; } }
   .flash { animation: flashGreen 0.5s ease; }
 
@@ -380,8 +404,10 @@
     font-size: 11px; color: var(--text-secondary);
     text-align: center; margin-top: 24px;
     padding-top: 20px; border-top: 0.5px solid var(--border-lo);
-    line-height: 1.6;
+    line-height: 1.8;
   }
+  .footer-link { color: var(--teal-text); text-decoration: none; }
+  .footer-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -432,10 +458,17 @@
         <div class="stat-value" id="stat-codons">—</div>
         <div class="stat-unit">triplets</div>
       </div>
-      <div class="stat-item">
+      <div class="stat-item stat-item-restrict">
         <div class="stat-label">Restriction Hits</div>
         <div class="stat-value" id="stat-restrict">—</div>
-        <div class="stat-unit">sites found</div>
+        <div class="stat-unit" id="stat-restrict-unit">sites found</div>
+        <div class="restrict-chips" id="restrict-chips"></div>
+      </div>
+      <div class="stat-item stat-item-restrict">
+        <div class="stat-label">Longest Homopolymer</div>
+        <div class="stat-value" id="stat-homopoly">—</div>
+        <div class="stat-unit" id="stat-homopoly-unit">nucleotides</div>
+        <div class="restrict-chips" id="homopoly-chips"></div>
       </div>
     </div>
     <div class="gc-row">
@@ -467,10 +500,10 @@
           ⚠ Invalid characters: <span id="invalid-chars"></span>. Only standard single-letter codes accepted.
         </div>
         <div class="opts-grid">
-          <select id="strategy-select">
+          <select id="strategy-select" onchange="updateStrategyInfo()">
             <option value="top">Most preferred codon</option>
-            <option value="weighted">Frequency-weighted random</option>
-            <option value="harmonized">Harmonized (no rare codons)</option>
+            <option value="weighted" selected>Weighted random (rare excluded)</option>
+            <option value="harmonized">Harmonized (most preferred, no rare)</option>
           </select>
           <select id="stop-select">
             <option value="TAA">Stop codon: TAA (preferred)</option>
@@ -479,9 +512,14 @@
             <option value="none">No stop codon</option>
           </select>
         </div>
+        <div class="strategy-info" id="strategy-info"></div>
         <div class="toggle-row" onclick="toggleOption('restrict')">
           <div class="toggle-pill" id="toggle-restrict"></div>
           Avoid restriction sites (NdeI, EcoRI, BamHI, XhoI, NotI + Golden Gate: BsaI, BbsI, BsmBI, SapI…)
+        </div>
+        <div class="toggle-row" onclick="toggleOption('homopoly')">
+          <div class="toggle-pill" id="toggle-homopoly"></div>
+          Break homopolymer runs ≥ 5 nt (poly-G/C) and ≥ 8 nt (poly-A/T)
         </div>
         <div class="actions">
           <button class="btn-primary" onclick="optimize()">Optimize →</button>
@@ -546,6 +584,8 @@
   <footer>
     Codon usage: <em>E. coli</em> K-12 MG1655 (Kazusa Codon Usage Database · GenBank Release 260) ·
     Strategies: most-preferred, frequency-weighted, rare-codon harmonized · For research use only
+    <br style="margin-bottom:6px">
+    © 2026 Elwy H. Abdelkader · Built with the assistance of <a class="footer-link" href="https://claude.ai" target="_blank">Claude</a> (Anthropic)
   </footer>
 
 </div>
@@ -601,22 +641,37 @@ const RESTRICT_SITES = {
   'BtgZI':'GCGATG','BtgZI_rc':'CATCGC',
 };
 
-const options = { restrict: false };
+const options = { restrict: false, homopoly: false };
 function toggleOption(key) {
   options[key] = !options[key];
   document.getElementById('toggle-'+key).classList.toggle('on', options[key]);
 }
 
+const STRATEGY_INFO = {
+  top: '<strong>Most preferred:</strong> Always picks the single highest-frequency codon for every amino acid. Maximises expression bias but creates a repetitive sequence — the ribosome can stall if it repeatedly depletes a single tRNA pool, and sequence repetition can promote mRNA secondary structure.',
+  weighted: '<strong>Weighted random (rare excluded):</strong> Samples proportionally from the E. coli codon frequency distribution, but first removes any codon used less than 10% of the time. This mirrors the natural variation in codon usage the ribosome expects, avoiding tRNA depletion stalls, while never risking a rare codon (e.g. Arg AGA 4%, Leu CTA 4%) that would cause pausing or frameshifting. <strong>Recommended for most expression work.</strong>',
+  harmonized: '<strong>Harmonized:</strong> Like most-preferred, but rare codons (< 10% usage) are excluded before picking. In practice gives the same result as most-preferred for the majority of amino acids — the difference is that synonymous codons at the bottom of a large family (e.g. Arg AGA/AGG, Leu CTA) can never be selected, even accidentally.',
+};
+
+function updateStrategyInfo() {
+  const val = document.getElementById('strategy-select').value;
+  const box = document.getElementById('strategy-info');
+  box.innerHTML = STRATEGY_INFO[val] || '';
+  box.classList.toggle('show', !!STRATEGY_INFO[val]);
+}
+
 function pickCodon(aa, strategy) {
   const codons = CODON_TABLE[aa]; if (!codons) return null;
   if (strategy==='top') return codons.reduce((b,c)=>c[1]>b[1]?c:b)[0];
-  if (strategy==='harmonized') {
-    const pool=codons.filter(c=>c[1]>=0.10);
-    return (pool.length?pool:codons).reduce((b,c)=>c[1]>b[1]?c:b)[0];
-  }
-  let r=Math.random(), cum=0;
-  for (const [codon,freq] of codons) { cum+=freq; if(r<cum) return codon; }
-  return codons[codons.length-1][0];
+  // Both weighted and harmonized exclude rare codons (<10%); weighted then samples proportionally
+  const pool = codons.filter(c=>c[1]>=0.10);
+  const safe = pool.length ? pool : codons;
+  if (strategy==='harmonized') return safe.reduce((b,c)=>c[1]>b[1]?c:b)[0];
+  // weighted: proportional sampling from safe pool (renormalised)
+  const total = safe.reduce((s,c)=>s+c[1], 0);
+  let r=Math.random()*total;
+  for (const [codon,freq] of safe) { r-=freq; if(r<=0) return codon; }
+  return safe[safe.length-1][0];
 }
 
 function optimize() {
@@ -634,7 +689,8 @@ function optimize() {
   for (const aa of raw) { const c=pickCodon(aa,strategy); if(c) codons.push({aa,codon:c}); }
   if (stopSel!=='none') codons.push({aa:'*',codon:stopSel});
   let dnaSeq=codons.map(c=>c.codon).join('');
-  if (options.restrict) dnaSeq=avoidSites(codons,dnaSeq);
+  if (options.restrict)  dnaSeq=avoidSites(codons,dnaSeq);
+  if (options.homopoly)  dnaSeq=breakHomopolymers(codons,dnaSeq);
 
   renderDNA(codons,dnaSeq);
   renderStats(dnaSeq);
@@ -659,6 +715,65 @@ function avoidSites(codons, seq) {
   return seq;
 }
 
+// Find the longest homopolymer run: returns {nt, len, pos} or null
+function longestRun(seq) {
+  let best={nt:'',len:0,pos:-1}, cur={nt:seq[0],len:1,pos:0};
+  for (let i=1;i<seq.length;i++) {
+    if (seq[i]===cur.nt) { cur.len++; }
+    else { if(cur.len>best.len) best={...cur}; cur={nt:seq[i],len:1,pos:i}; }
+  }
+  if (cur.len>best.len) best={...cur};
+  return best.len>1?best:null;
+}
+
+// Find ALL runs above threshold
+function findRuns(seq, thresholds) {
+  const runs=[]; let i=0;
+  while(i<seq.length){
+    let j=i; while(j<seq.length&&seq[j]===seq[i]) j++;
+    const len=j-i, nt=seq[i], thresh=thresholds[nt]||5;
+    if(len>=thresh) runs.push({nt,len,pos:i});
+    i=j;
+  }
+  return runs;
+}
+
+function breakHomopolymers(codons, seq) {
+  // thresholds: G/C ≥ 5, A/T ≥ 8
+  const THRESH={A:8,T:8,G:5,C:5};
+  let tries=0;
+  while(tries++<codons.length*2) {
+    const runs=findRuns(seq,THRESH);
+    if(!runs.length) break;
+    let broken=false;
+    for(const run of runs){
+      // try swapping each codon that overlaps this run
+      const startCodon=Math.max(0,Math.floor(run.pos/3)-1);
+      const endCodon=Math.min(codons.length-1,Math.floor((run.pos+run.len-1)/3)+1);
+      for(let idx=startCodon;idx<=endCodon;idx++){
+        const aa=codons[idx].aa;
+        const alts=(CODON_TABLE[aa]||[])
+          .filter(c=>c[0]!==codons[idx].codon)
+          .sort((a,b)=>b[1]-a[1]);
+        for(const [alt] of alts){
+          const prev=codons[idx].codon;
+          codons[idx].codon=alt;
+          const candidate=codons.map(c=>c.codon).join('');
+          const newRuns=findRuns(candidate,THRESH);
+          // accept if this specific run is shorter or gone
+          const stillBad=newRuns.some(r=>r.nt===run.nt&&r.pos<=run.pos+run.len&&r.pos+r.len>=run.pos&&r.len>=THRESH[run.nt]);
+          if(!stillBad){seq=candidate;broken=true;break;}
+          codons[idx].codon=prev; // revert
+        }
+        if(broken) break;
+      }
+      if(broken) break;
+    }
+    if(!broken) break; // no more progress possible
+  }
+  return seq;
+}
+
 function renderDNA(codons, dnaSeq) {
   const el=document.getElementById('dna-output');
   el.innerHTML=codons.map((c,i)=>{
@@ -677,10 +792,40 @@ function renderStats(dna) {
   document.getElementById('gc-pct-label').textContent=pct+'%';
   document.getElementById('gc-bar').style.width=pct+'%';
   document.getElementById('stat-codons').textContent=Math.floor(dna.length/3);
-  let hits=0;
-  for (const s of Object.values(RESTRICT_SITES)) if(dna.includes(s)) hits++;
+
+  // restriction hits
+  const hitNames=[];
+  for (const [name,site] of Object.entries(RESTRICT_SITES)) if(dna.includes(site)) hitNames.push(name);
   const el=document.getElementById('stat-restrict');
-  el.textContent=hits; el.className='stat-value '+(hits>0?'warn':'ok');
+  el.textContent=hitNames.length;
+  el.className='stat-value '+(hitNames.length>0?'warn':'ok');
+  const chipsEl=document.getElementById('restrict-chips');
+  chipsEl.innerHTML=hitNames.length>0
+    ?hitNames.map(n=>`<span class="restrict-chip">${n}</span>`).join('')
+    :'<span class="restrict-chip-ok">none</span>';
+
+  // homopolymer runs
+  const THRESH={A:8,T:8,G:5,C:5};
+  const allRuns=findRuns(dna,{A:2,T:2,G:2,C:2}); // find all runs ≥ 2 for longest
+  const best=longestRun(dna);
+  const hpEl=document.getElementById('stat-homopoly');
+  const hpChips=document.getElementById('homopoly-chips');
+  if(best&&best.len>=3){
+    hpEl.textContent=best.len;
+    const thresh=THRESH[best.nt];
+    hpEl.className='stat-value '+(best.len>=thresh?'warn':best.len>=thresh-1?'':'ok');
+    // list all problematic runs
+    const badRuns=findRuns(dna,THRESH);
+    if(badRuns.length){
+      hpChips.innerHTML=badRuns.map(r=>`<span class="restrict-chip">poly-${r.nt}×${r.len}</span>`).join('');
+    } else {
+      hpChips.innerHTML='<span class="restrict-chip-ok">none above threshold</span>';
+    }
+  } else {
+    hpEl.textContent=best?best.len:1;
+    hpEl.className='stat-value ok';
+    hpChips.innerHTML='<span class="restrict-chip-ok">none above threshold</span>';
+  }
 }
 
 function renderAAStrip(seq) {
@@ -774,6 +919,7 @@ document.getElementById('aa-input').addEventListener('input',function(){
 });
 
 renderCodonLegend();
+updateStrategyInfo();
 </script>
 </body>
 </html>
