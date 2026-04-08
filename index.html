@@ -493,6 +493,12 @@
         <div class="stat-unit" id="stat-homopoly-unit">nucleotides</div>
         <div class="restrict-chips" id="homopoly-chips"></div>
       </div>
+      <div class="stat-item stat-item-restrict">
+        <div class="stat-label">5' ΔG <span style="font-weight:400;text-transform:none;letter-spacing:0">(first 70 nt)</span></div>
+        <div class="stat-value" id="stat-dg5">—</div>
+        <div class="stat-unit">kcal/mol · lower = more structure</div>
+        <div class="restrict-chips" id="dg5-note"></div>
+      </div>
     </div>
     <div class="gc-row">
       <div class="gc-bar-wrap">
@@ -802,6 +808,163 @@ function breakHomopolymers(codons, seq) {
   return seq;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// RNA 5'-END MFE FOLDING  —  simplified Zuker DP, Turner 2004 parameters
+// Analyses the first 70 nt of the CDS (DNA → RNA, T=U).
+// Returns ΔG37 (kcal/mol). Approximate; use RNAfold for pub-quality results.
+// Ref: Xia et al. 1998 (Biochemistry), Mathews et al. 1999 (JMB),
+//      Turner & Mathews 2010 (NAR), Kudla et al. 2009 (Science).
+// ═══════════════════════════════════════════════════════════════════════════
+function computeDG5prime(dna) {
+  const WINDOW = 70, RF_INF = 9999, RT37 = 0.5917, MIN_HP = 3;
+  const rna = dna.toUpperCase().replace(/T/g,'U').slice(0, WINDOW);
+  const N   = rna.length;
+  if (N < 5) return 0;
+
+  const s = [...rna].map(c => ({A:0,C:1,G:2,U:3}[c] ?? -1));
+  const B = 'ACGU';
+
+  // Watson-Crick + GU/UG wobble pairing
+  function cp(a, b) {
+    return a>=0&&b>=0&&(
+      (a===0&&b===3)||(a===3&&b===0)||   // AU / UA
+      (a===1&&b===2)||(a===2&&b===1)||   // CG / GC
+      (a===2&&b===3)||(a===3&&b===2)     // GU / UG wobble
+    );
+  }
+
+  // Penalty for non-GC closing pairs (kcal/mol)
+  function cpp(a, b) {
+    if ((a===1&&b===2)||(a===2&&b===1)) return 0.0;  // GC / CG: free
+    if ((a===0&&b===3)||(a===3&&b===0)) return 0.5;  // AU / UA
+    return 0.7;                                        // GU / UG wobble
+  }
+
+  // ── Nearest-neighbour stacking energies (ΔG37, kcal/mol) ────────────────
+  // Key: B[s[i]] + B[s[i+1]] + B[s[j]] + B[s[j-1]]
+  //   = NNDB notation: 5'-s[i]s[i+1]-3' / 3'-s[j]s[j-1]-5'
+  //   outer pair (i,j), inner pair (i+1, j-1)
+  // Sources: Xia et al. 1998 / Mathews et al. 1999 (WC pairs);
+  //          Turner 2004 wobble parameters (GU/UG entries, approximate)
+  const ST = {
+    // ── Watson-Crick × Watson-Crick ──
+    // AU outer
+    AAUU:-0.93, AUUA:-1.10, ACUG:-2.11, AGUC:-2.08,
+    // UA outer
+    UAAU:-1.33, UUAA:-0.93, UCAG:-2.08, UGAC:-2.11,
+    // CG outer
+    CAGU:-2.11, CUGA:-2.08, CCGG:-3.26, CGGC:-2.36,
+    // GC outer
+    GACU:-2.35, GUCA:-2.24, GCCG:-3.42, GGCC:-3.26,
+    // ── GU wobble outer × WC inner ──
+    GUAU:-1.40, GUUA:-0.90, GUCG:-1.50, GUGC:-1.30,
+    // ── UG wobble outer × WC inner ──
+    UGAU:-0.50, UGUA:-1.00, UGCG:-1.50, UGGC:-1.30,
+    // ── WC outer × GU wobble inner ──
+    AAGU:-0.30, AAUG:-0.30, UAGU:-0.30, UAUG:-0.30,
+    CAGU:-2.11, // already above — CG outer, AU inner (not wobble)
+    CAUG:-0.30, GAUG:-0.30, GCUG:-0.30, GCGU:-0.30,
+    // ── GU × GU and UG × UG wobble stacks ──
+    GUGU:-0.50, UGUG:-0.50, GUUG:-0.50, GGUU:-0.50,
+  };
+
+  function getStack(i, j) {
+    // Stack: outer pair (i,j), inner pair (i+1, j-1)
+    if (i<0||j>=N||i+1>=j-1) return RF_INF;
+    if (!cp(s[i],s[j])||!cp(s[i+1],s[j-1])) return RF_INF;
+    const key = B[s[i]]+B[s[i+1]]+B[s[j]]+B[s[j-1]];
+    const v = ST[key];
+    return v !== undefined ? v : 0.4;   // unknown wobble combo: small penalty
+  }
+
+  // ── Hairpin loop energies (Turner 2004) ──────────────────────────────────
+  const HP_INIT = [RF_INF,RF_INF,RF_INF,
+    5.70, 5.50, 5.60, 5.40, 5.90, 5.40, 5.50, 5.60,   // n=3..10
+    5.50, 5.40, 5.30, 5.30, 5.30, 5.20, 5.20, 5.10,   // n=11..18
+    5.10, 5.00];                                          // n=19..20
+
+  // GNRA / UNCG / CUYG special tetraloop bonuses (ΔΔG, kcal/mol)
+  const TL = {
+    GGAA:-2.8, GCAA:-2.8, GAAA:-2.8, GUAA:-2.8,   // GNRA
+    AGAA:-2.8, UGAA:-2.8, CGAA:-2.8,
+    UUCG:-2.5, GUCG:-2.5, CUCG:-2.5, AUCG:-2.5,   // UNCG
+    CUGG:-2.0, AUGG:-2.0, GUGG:-2.0, UUGG:-2.0,   // CUYG
+  };
+
+  function hairpinE(i, j) {
+    if (!cp(s[i],s[j])) return RF_INF;
+    const loop = j-i-1;
+    if (loop < MIN_HP) return RF_INF;
+    let e = loop < HP_INIT.length ? HP_INIT[loop]
+          : 5.0 + RT37 * Math.log(loop / 20);
+    e += cpp(s[i], s[j]);
+    if (loop === 4) { const tl = s.slice(i+1,j).map(k=>B[k]).join(''); e += TL[tl]??0; }
+    return e;
+  }
+
+  // ── Interior / bulge loop energies ──────────────────────────────────────
+  const BG = [RF_INF, 3.8, 2.8, 3.2, 3.6, 4.0, 4.4, 4.6, 4.8];
+  const IL  = [RF_INF, RF_INF, 0.7, 1.0, 1.2, 1.7, 2.2, 2.2, 2.6, 3.0, 3.4];
+
+  function loopE(n1, n2) {
+    if (n1===0&&n2===0) return 0;
+    if (n1===0||n2===0) {
+      const nb=n1+n2;
+      return nb < BG.length ? BG[nb] : 4.0 + RT37*Math.log(nb/5);
+    }
+    const nt=n1+n2;
+    const init = nt < IL.length ? IL[nt] : 2.2 + RT37*Math.log(nt/4);
+    return init + Math.min(3.0, 0.4*Math.abs(n1-n2));
+  }
+
+  // ── Zuker DP ─────────────────────────────────────────────────────────────
+  // V[i][j] = MFE with pair(i,j) forced
+  const V = Array.from({length:N}, ()=>new Float64Array(N).fill(RF_INF));
+
+  for (let span = MIN_HP+1; span < N; span++) {
+    for (let i = 0; i+span < N; i++) {
+      const j = i+span;
+      if (!cp(s[i],s[j])) continue;
+
+      // 1. Hairpin
+      let best = hairpinE(i,j);
+
+      // 2. Stacked pair: (i,j) enclosing (i+1,j-1)
+      if (span >= MIN_HP+2 && cp(s[i+1],s[j-1])) {
+        const sk = getStack(i,j);
+        if (sk < RF_INF && V[i+1][j-1] < RF_INF)
+          best = Math.min(best, sk + V[i+1][j-1]);
+      }
+
+      // 3. Interior / bulge loops (up to 4 unpaired nt per side)
+      for (let n1=0; n1<=4; n1++) {
+        for (let n2=0; n2<=4; n2++) {
+          if (n1+n2===0) continue;
+          const k=i+n1+1, l=j-n2-1;
+          if (k>=l-MIN_HP||!cp(s[k],s[l])||V[k][l]>=RF_INF) continue;
+          const le = loopE(n1,n2) + cpp(s[i],s[j]) + cpp(s[k],s[l]);
+          if (le < RF_INF) best = Math.min(best, le + V[k][l]);
+        }
+      }
+
+      V[i][j] = best;
+    }
+  }
+
+  // W[j] = MFE for [0..j], allowing any number of independent stems
+  const W = new Float64Array(N).fill(0);
+  for (let j = 0; j < N; j++) {
+    if (j > 0) W[j] = W[j-1];   // j unpaired
+    for (let i = 0; i <= j-MIN_HP-1; i++) {
+      if (V[i][j] >= RF_INF) continue;
+      const contrib = (i>0 ? W[i-1] : 0) + V[i][j];
+      if (contrib < W[j]) W[j] = contrib;
+    }
+  }
+
+  return W[N-1];
+}
+
 function renderDNA(codons, dnaSeq) {
   const el=document.getElementById('dna-output');
   el.innerHTML=codons.map((c,i)=>{
@@ -834,7 +997,6 @@ function renderStats(dna) {
 
   // homopolymer runs
   const THRESH={A:8,T:8,G:5,C:5};
-  const allRuns=findRuns(dna,{A:2,T:2,G:2,C:2}); // find all runs ≥ 2 for longest
   const best=longestRun(dna);
   const hpEl=document.getElementById('stat-homopoly');
   const hpChips=document.getElementById('homopoly-chips');
@@ -842,18 +1004,24 @@ function renderStats(dna) {
     hpEl.textContent=best.len;
     const thresh=THRESH[best.nt];
     hpEl.className='stat-value '+(best.len>=thresh?'warn':best.len>=thresh-1?'':'ok');
-    // list all problematic runs
     const badRuns=findRuns(dna,THRESH);
-    if(badRuns.length){
-      hpChips.innerHTML=badRuns.map(r=>`<span class="restrict-chip">poly-${r.nt}×${r.len}</span>`).join('');
-    } else {
-      hpChips.innerHTML='<span class="restrict-chip-ok">none above threshold</span>';
-    }
+    hpChips.innerHTML=badRuns.length
+      ?badRuns.map(r=>`<span class="restrict-chip">poly-${r.nt}×${r.len}</span>`).join('')
+      :'<span class="restrict-chip-ok">none above threshold</span>';
   } else {
     hpEl.textContent=best?best.len:1;
     hpEl.className='stat-value ok';
     hpChips.innerHTML='<span class="restrict-chip-ok">none above threshold</span>';
   }
+
+  // 5' ΔG via nearest-neighbour RNA folding
+  const dg = computeDG5prime(dna);
+  const dgEl = document.getElementById('stat-dg5');
+  const dgNote = document.getElementById('dg5-note');
+  dgEl.textContent = dg.toFixed(1);
+  if (dg > -5)       { dgEl.className='stat-value ok';   dgNote.innerHTML='<span class="restrict-chip-ok">✓ weak — good for translation initiation</span>'; }
+  else if (dg > -10) { dgEl.className='stat-value';       dgNote.innerHTML='<span class="restrict-chip">⚠ moderate — may reduce expression</span>'; }
+  else               { dgEl.className='stat-value warn';  dgNote.innerHTML='<span class="restrict-chip">✗ strong — likely to impede ribosome loading</span>'; }
 }
 
 function renderAAStrip(seq) {
@@ -944,6 +1112,8 @@ function clearAll() {
   document.getElementById('aa-count').textContent='0 aa';
   document.getElementById('nt-count').textContent='0 nt';
   document.getElementById('error-msg').classList.remove('show');
+  document.getElementById('stat-dg5').textContent='—';
+  document.getElementById('dg5-note').innerHTML='';
 }
 function loadExample() {
   document.getElementById('aa-input').value='MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK';
