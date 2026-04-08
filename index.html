@@ -331,33 +331,6 @@
   }
   .aa-legend-dot { width: 7px; height: 7px; border-radius: 50%; }
 
-  /* ── CODON TABLE ── */
-  .codon-table-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 6px;
-  }
-  .codon-entry {
-    background: var(--bg-secondary); border: 0.5px solid var(--border-lo);
-    border-radius: var(--radius-md); padding: 8px 10px;
-  }
-  .codon-aa { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
-  .aa-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .codon-aa-name { font-size: 10px; color: var(--text-secondary); }
-  .codon-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 2px 0;
-    border-top: 0.5px solid var(--border-lo);
-  }
-  .codon-row:first-of-type { border-top: none; }
-  .codon-dna { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; }
-  .codon-freq { font-size: 10px; color: var(--text-secondary); }
-  .codon-row.top-codon .codon-freq { color: var(--teal-text); font-weight: 500; }
-  .codon-bar-wrap { flex: 1; margin: 0 7px; }
-  .codon-bar-track { height: 3px; background: var(--border-lo); border-radius: 2px; overflow: hidden; }
-  .codon-bar-fill { height: 100%; background: var(--teal-dot); border-radius: 2px; opacity: 0.5; }
-  .codon-row.top-codon .codon-bar-fill { opacity: 1; }
-
   /* ── FASTA INPUT ── */
   .fasta-input {
     font-family: var(--font-sans); font-size: 12px;
@@ -398,6 +371,56 @@
   }
   @keyframes flashGreen { 0% { outline: 2px solid var(--teal-dot); } 100% { outline: 2px solid transparent; } }
   .flash { animation: flashGreen 0.5s ease; }
+
+  /* ── CODON COMPARISON ── */
+  .cmp-legend {
+    display: flex; gap: 16px; margin-bottom: 14px;
+    font-size: 11px; color: var(--text-secondary); align-items: center; flex-wrap: wrap;
+  }
+  .cmp-legend-item { display: flex; align-items: center; gap: 6px; }
+  .cmp-swatch { display: inline-block; width: 22px; height: 6px; border-radius: 2px; }
+  .cmp-swatch-seq   { background: var(--teal-dot); }
+  .cmp-swatch-ecoli { background: var(--border-hi); }
+
+  .cmp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+    gap: 8px;
+  }
+  .cmp-aa-block {
+    background: var(--bg-secondary); border: 0.5px solid var(--border-lo);
+    border-radius: var(--radius-md); padding: 9px 11px;
+  }
+  .cmp-aa-header {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+    font-size: 12px; font-weight: 500; color: var(--text-primary);
+    border-bottom: 0.5px solid var(--border-lo); padding-bottom: 6px;
+  }
+  .cmp-aa-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cmp-aa-sub { font-size: 10px; color: var(--text-secondary); font-weight: 400; margin-left: auto; }
+
+  .cmp-codon-row { margin-bottom: 6px; }
+  .cmp-codon-row:last-child { margin-bottom: 0; }
+  .cmp-codon-label {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;
+  }
+  .cmp-codon-name {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); letter-spacing: .04em;
+  }
+  .cmp-pct-pair { font-family: var(--font-mono); font-size: 10px; display: flex; gap: 6px; }
+  .cmp-pct-seq   { color: var(--teal-text); }
+  .cmp-pct-ecoli { color: var(--text-secondary); }
+
+  .cmp-bar-pair { display: flex; flex-direction: column; gap: 2px; }
+  .cmp-bar-track {
+    height: 4px; background: var(--border-lo); border-radius: 2px; overflow: hidden;
+  }
+  .cmp-bar-fill-seq {
+    height: 100%; border-radius: 2px; background: var(--teal-dot); transition: width .4s ease;
+  }
+  .cmp-bar-fill-ecoli {
+    height: 100%; border-radius: 2px; background: var(--border-hi); transition: width .4s ease;
+  }
 
   /* ── FOOTER ── */
   footer {
@@ -570,14 +593,18 @@
     </div>
   </div>
 
-  <!-- CODON TABLE -->
-  <div class="card">
+  <!-- CODON FREQUENCY COMPARISON -->
+  <div class="card" id="codon-cmp-card" style="display:none">
     <div class="card-top">
-      <div class="card-dot"></div>
-      <span>E. coli K-12 preferred codons · usage frequency</span>
+      <div class="card-dot coral"></div>
+      <span>Codon usage · optimized sequence vs E. coli K-12 reference</span>
     </div>
     <div class="card-body">
-      <div class="codon-table-grid" id="codon-table-grid"></div>
+      <div class="cmp-legend">
+        <span class="cmp-legend-item"><span class="cmp-swatch cmp-swatch-seq"></span>This sequence</span>
+        <span class="cmp-legend-item"><span class="cmp-swatch cmp-swatch-ecoli"></span>E. coli K-12 reference</span>
+      </div>
+      <div class="cmp-grid" id="cmp-grid"></div>
     </div>
   </div>
 
@@ -695,6 +722,7 @@ function optimize() {
   renderDNA(codons,dnaSeq);
   renderStats(dnaSeq);
   renderAAStrip(raw);
+  renderCodonComparison(codons);
   document.getElementById('stats-strip').classList.add('show');
   document.getElementById('aa-annot-card').style.display='block';
   document.getElementById('nt-count').textContent=dnaSeq.length+' nt';
@@ -836,31 +864,56 @@ function renderAAStrip(seq) {
   document.getElementById('aa-count').textContent=seq.length+' aa';
 }
 
-function renderCodonLegend() {
+function renderCodonComparison(codons) {
   const order=['A','R','N','D','C','Q','E','G','H','I','L','K','M','F','P','S','T','W','Y','V'];
-  document.getElementById('codon-table-grid').innerHTML=order.map(aa=>{
-    const allCodons=[...(CODON_TABLE[aa]||[])].sort((a,b)=>b[1]-a[1]);
+
+  // count codon occurrences in optimized sequence (excluding stop)
+  const seqCount={};
+  const aaTotals={};
+  for(const {aa,codon} of codons){
+    if(aa==='*') continue;
+    seqCount[codon]=(seqCount[codon]||0)+1;
+    aaTotals[aa]=(aaTotals[aa]||0)+1;
+  }
+
+  const grid=document.getElementById('cmp-grid');
+  grid.innerHTML=order.map(aa=>{
+    const entries=(CODON_TABLE[aa]||[]).slice().sort((a,b)=>b[1]-a[1]);
+    const total=aaTotals[aa]||0;
     const cls=AA_CLASS[aa]||'nonpolar';
-    const topCodon=allCodons[0][0];
-    const rows=allCodons.map(([codon,freq])=>{
-      const isTop=codon===topCodon;
-      const colored=[...codon].map(nt=>`<span class="nt-${nt}">${nt}</span>`).join('');
-      const pct=(freq*100).toFixed(0);
-      return `<div class="codon-row${isTop?' top-codon':''}">
-        <div class="codon-dna">${colored}</div>
-        <div class="codon-bar-wrap"><div class="codon-bar-track"><div class="codon-bar-fill" style="width:${pct}%"></div></div></div>
-        <div class="codon-freq">${pct}%</div>
+
+    const rows=entries.map(([codon,ecoliFreq])=>{
+      const seqFreq=total>0?(seqCount[codon]||0)/total:0;
+      const seqPct=(seqFreq*100).toFixed(0);
+      const ecoliPct=(ecoliFreq*100).toFixed(0);
+      const ntColored=[...codon].map(nt=>`<span class="nt-${nt}">${nt}</span>`).join('');
+      return `<div class="cmp-codon-row">
+        <div class="cmp-codon-label">
+          <span class="cmp-codon-name">${ntColored}</span>
+          <span class="cmp-pct-pair">
+            <span class="cmp-pct-seq">${seqPct}%</span>
+            <span class="cmp-pct-ecoli">${ecoliPct}%</span>
+          </span>
+        </div>
+        <div class="cmp-bar-pair">
+          <div class="cmp-bar-track"><div class="cmp-bar-fill-seq" style="width:${seqPct}%"></div></div>
+          <div class="cmp-bar-track"><div class="cmp-bar-fill-ecoli" style="width:${ecoliPct}%"></div></div>
+        </div>
       </div>`;
     }).join('');
-    return `<div class="codon-entry">
-      <div class="codon-aa">
-        <div class="aa-dot" style="background:var(--aa-${cls})"></div>
+
+    return `<div class="cmp-aa-block">
+      <div class="cmp-aa-header">
+        <div class="cmp-aa-dot" style="background:var(--aa-${cls})"></div>
         <span style="color:var(--aa-${cls})">${aa}</span>
-        <span class="codon-aa-name">${AA_NAMES[aa]||''}</span>
+        <span style="color:var(--text-primary)">${AA_NAMES[aa]||''}</span>
+        <span class="cmp-aa-sub">${total} used</span>
       </div>
       ${rows}
     </div>`;
   }).join('');
+
+  document.getElementById('codon-cmp-card').style.display='block';
 }
 
 function copyDNA() {
@@ -887,6 +940,7 @@ function clearAll() {
   document.getElementById('dna-output').dataset.raw='';
   document.getElementById('stats-strip').classList.remove('show');
   document.getElementById('aa-annot-card').style.display='none';
+  document.getElementById('codon-cmp-card').style.display='none';
   document.getElementById('aa-count').textContent='0 aa';
   document.getElementById('nt-count').textContent='0 nt';
   document.getElementById('error-msg').classList.remove('show');
@@ -918,7 +972,6 @@ document.getElementById('aa-input').addEventListener('input',function(){
   document.getElementById('aa-count').textContent=(this.value.trim().toUpperCase().replace(/\s+/g,'').length||0)+' aa';
 });
 
-renderCodonLegend();
 updateStrategyInfo();
 </script>
 </body>
