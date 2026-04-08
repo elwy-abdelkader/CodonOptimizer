@@ -466,6 +466,34 @@
   @keyframes flashGreen { 0% { outline: 2px solid var(--teal-dot); } 100% { outline: 2px solid transparent; } }
   .flash { animation: flashGreen 0.5s ease; }
 
+  /* ── PROTEIN PROPERTIES STRIP ── */
+  .prot-props { display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .prot-props.show { display: flex; }
+  .prot-chip {
+    font-family: var(--font-mono); font-size: 10px; padding: 3px 9px;
+    border-radius: 20px; background: var(--bg-secondary);
+    border: 0.5px solid var(--border-lo); color: var(--text-secondary); white-space: nowrap;
+  }
+  .prot-chip strong { color: var(--text-primary); font-weight: 500; }
+  .prot-chip.prot-warn { background: var(--red-bg); border-color: var(--red-border); color: var(--red-label); }
+  .prot-chip.prot-warn strong { color: var(--red-label); }
+
+  /* ── COLOUR MODE TOGGLE ── */
+  .colour-toggle {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .04em;
+    padding: 2px 9px; border-radius: 20px; cursor: pointer;
+    background: var(--bg-primary); border: 0.5px solid var(--border-mid);
+    color: var(--text-secondary); transition: all .15s; margin-left: auto; white-space: nowrap;
+  }
+  .colour-toggle:hover { border-color: var(--teal-dot); color: var(--teal-text); }
+  .colour-toggle.quality-mode { background: var(--teal-bg); border-color: var(--teal-border); color: var(--teal-text); }
+
+  /* ── CODON QUALITY COLOURS ── */
+  .cq-good { color: var(--teal-dot); }
+  .cq-med  { color: #c07010; }
+  .cq-poor { color: var(--red-label); }
+  body.dark .cq-med { color: #e0a030; }
+
   /* ── CODON COMPARISON ── */
   .cmp-legend {
     display: flex; gap: 16px; margin-bottom: 14px;
@@ -605,6 +633,12 @@
         <div class="stat-unit">target &gt; 0.50</div>
         <div class="stat-desc">tRNA Adaptation Index — geometric mean of per-codon tRNA availability weights (dos Reis 2004). Reflects how well codon usage matches the <em>E. coli</em> tRNA pool. Highly expressed endogenous genes score 0.5–0.7.</div>
       </div>
+      <div class="stat-item">
+        <div class="stat-label">CAI</div>
+        <div class="stat-value" id="stat-cai">—</div>
+        <div class="stat-unit">target &gt; 0.80</div>
+        <div class="stat-desc">Codon Adaptation Index (Sharp &amp; Li 1987) — geometric mean of per-codon w values (codon freq / max synonymous freq). Industry standard; synthesis vendors report this. Values &gt;0.8 associate with high expression.</div>
+      </div>
     </div>
     <div class="gc-row">
       <div class="gc-bar-wrap">
@@ -631,6 +665,7 @@
       </div>
       <div class="card-body">
         <textarea id="aa-input" placeholder="Paste single-letter sequence (MSKGEELFT…)" spellcheck="false"></textarea>
+        <div class="prot-props" id="prot-props"></div>
         <div id="error-msg" class="error-msg">
           ⚠ Invalid characters: <span id="invalid-chars"></span>. Only standard single-letter codes accepted.
         </div>
@@ -702,6 +737,7 @@
       <div class="card-top">
         <div class="card-dot coral"></div>
         <span>Optimized DNA sequence</span>
+        <button class="colour-toggle" id="colour-toggle" onclick="toggleColourMode()" title="Switch between nucleotide identity and codon quality colouring">NT colours</button>
         <span class="card-count" id="nt-count">0 nt</span>
       </div>
       <div class="card-body">
@@ -709,7 +745,7 @@
           <span class="placeholder-msg">Optimized coding sequence will appear here…</span>
         </div>
         <input class="fasta-input" id="fasta-name" type="text" placeholder="Sequence name for FASTA header…" value="optimized_ecoli">
-        <p class="info-note">5'→3' coding strand · ATG start included · hover codons for AA identity</p>
+        <p class="info-note">5'→3' coding strand · ATG start included · hover codons for AA → codon · click toggle for quality view</p>
         <div class="actions">
           <button class="btn-ghost btn-sm" onclick="copyDNA()">⎘ Copy</button>
           <button class="btn-ghost btn-sm" onclick="downloadFASTA()">↓ FASTA</button>
@@ -937,6 +973,7 @@ function optimize() {
   const invalid=[...new Set(raw.split('').filter(c=>!valid.has(c)))];
   if (invalid.length) { invalEl.textContent=invalid.join(', '); errEl.classList.add('show'); return; }
   errEl.classList.remove('show');
+  renderProteinProps(raw);
 
   const strategy  = document.getElementById('strategy-select').value;
   const stopSel   = document.getElementById('stop-select').value;
@@ -1039,7 +1076,130 @@ function breakHomopolymers(codons, seq) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// tRNA ADAPTATION INDEX (tAI)
+// PROTEIN PROPERTIES  —  MW, pI, ε280, GRAVY from amino acid sequence
+// ═══════════════════════════════════════════════════════════════════════════
+const AA_MASS = {
+  A:71.0788,  R:156.1875, N:114.1038, D:115.0886, C:103.1388,
+  Q:128.1307, E:129.1155, G:57.0519,  H:137.1411, I:113.1594,
+  L:113.1594, K:128.1741, M:131.1926, F:147.1766, P:97.1167,
+  S:87.0782,  T:101.1051, W:186.2132, Y:163.1760, V:99.1326,
+};
+
+const AA_HYDRO = {
+  A:1.8,  R:-4.5, N:-3.5, D:-3.5, C:2.5,  Q:-3.5, E:-3.5,
+  G:-0.4, H:-3.2, I:4.5,  L:3.8,  K:-3.9, M:1.9,  F:2.8,
+  P:-1.6, S:-0.8, T:-0.7, W:-0.9, Y:-1.3, V:4.2,
+};
+
+function computeProteinProps(seq) {
+  if (!seq || seq.length < 2) return null;
+  // Molecular weight (average isotopic masses)
+  let mw = 18.0153;
+  for (const aa of seq) mw += (AA_MASS[aa] || 0);
+
+  // GRAVY (Kyte-Doolittle)
+  let gravySum = 0, gravyN = 0;
+  for (const aa of seq) {
+    if (AA_HYDRO[aa] !== undefined) { gravySum += AA_HYDRO[aa]; gravyN++; }
+  }
+  const gravy = gravyN > 0 ? gravySum / gravyN : 0;
+
+  // Residue counts
+  const cnt = {};
+  for (const aa of seq) cnt[aa] = (cnt[aa]||0)+1;
+
+  // Extinction coefficient ε280 (Pace et al. 1995)
+  const eps_red = (cnt.W||0)*5500 + (cnt.Y||0)*1490;
+  const eps_ox  = eps_red + Math.floor((cnt.C||0)/2)*125;
+
+  // pI by bisection on Henderson-Hasselbalch charge model (Bjellqvist pKas)
+  const PKA = { Nterm:9.60, Cterm:2.34, D:3.65, E:4.25, H:6.00, C:8.18, Y:10.53, K:10.53, R:12.48 };
+  function charge(pH) {
+    return (
+       1/(1+Math.pow(10, pH-PKA.Nterm)) - 1/(1+Math.pow(10, PKA.Cterm-pH))
+      -(cnt.D||0)/(1+Math.pow(10, PKA.D-pH))
+      -(cnt.E||0)/(1+Math.pow(10, PKA.E-pH))
+      +(cnt.H||0)/(1+Math.pow(10, pH-PKA.H))
+      -(cnt.C||0)/(1+Math.pow(10, PKA.C-pH))
+      -(cnt.Y||0)/(1+Math.pow(10, PKA.Y-pH))
+      +(cnt.K||0)/(1+Math.pow(10, pH-PKA.K))
+      +(cnt.R||0)/(1+Math.pow(10, pH-PKA.R))
+    );
+  }
+  let lo=0, hi=14, pi=7;
+  for (let i=0; i<100; i++) {
+    pi=(lo+hi)/2; const q=charge(pi);
+    if (Math.abs(q)<1e-8) break;
+    if (q>0) lo=pi; else hi=pi;
+  }
+
+  return { mw, pi, eps_red, eps_ox, gravy, cnt };
+}
+
+function renderProteinProps(seq) {
+  const el = document.getElementById('prot-props');
+  if (!el) return;
+  if (!seq || seq.length < 2) { el.classList.remove('show'); el.innerHTML=''; return; }
+
+  const p = computeProteinProps(seq);
+  if (!p) { el.classList.remove('show'); return; }
+
+  const gravyCls = p.gravy > 0.5 ? 'prot-warn' : '';
+  const gravyNote = p.gravy > 0.5 ? ' (hydrophobic — possible membrane/aggregation risk)' : p.gravy < -1 ? ' (hydrophilic)' : '';
+
+  el.innerHTML = [
+    `<span class="prot-chip"><strong>MW</strong> ${p.mw >= 1000 ? (p.mw/1000).toFixed(2)+' kDa' : p.mw.toFixed(0)+' Da'}</span>`,
+    `<span class="prot-chip"><strong>pI</strong> ${p.pi.toFixed(2)}</span>`,
+    `<span class="prot-chip"><strong>ε<sub>280</sub></strong> ${p.eps_red.toLocaleString()} M⁻¹cm⁻¹ (reduced) · ${p.eps_ox.toLocaleString()} (oxidised)</span>`,
+    `<span class="prot-chip ${gravyCls}"><strong>GRAVY</strong> ${p.gravy.toFixed(3)}${gravyNote}</span>`,
+    `<span class="prot-chip"><strong>Length</strong> ${seq.length} aa</span>`,
+  ].join('');
+  el.classList.add('show');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CAI (Codon Adaptation Index — Sharp & Li 1987)
+// w_i = freq(codon) / max_freq(synonymous_family)
+// CAI = geometric mean of w_i, excluding stop codons
+// ═══════════════════════════════════════════════════════════════════════════
+function computeCAI(codons) {
+  // Precompute max freq per AA
+  const maxF = {};
+  for (const [aa, entries] of Object.entries(CODON_TABLE))
+    maxF[aa] = Math.max(...entries.map(e=>e[1]));
+
+  let logSum = 0, n = 0;
+  for (const {aa, codon} of codons) {
+    if (aa === '*') continue;
+    const entry = (CODON_TABLE[aa]||[]).find(e=>e[0]===codon);
+    if (!entry) continue;
+    const w = entry[1] / maxF[aa];
+    if (w > 0) { logSum += Math.log(w); n++; }
+  }
+  return n > 0 ? Math.exp(logSum/n) : 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CODON QUALITY COLOUR MODE
+// Colours each codon by its tAI weight instead of nucleotide identity
+//   cq-good  (tAI ≥ 0.60) — teal
+//   cq-med   (tAI 0.30–0.59) — amber
+//   cq-poor  (tAI < 0.30) — red
+// ═══════════════════════════════════════════════════════════════════════════
+let _colourMode = 'nt'; // 'nt' | 'quality'
+let _lastCodons = [];
+
+function toggleColourMode() {
+  _colourMode = _colourMode === 'nt' ? 'quality' : 'nt';
+  const btn = document.getElementById('colour-toggle');
+  if (btn) {
+    btn.textContent = _colourMode === 'quality' ? 'Quality colours' : 'NT colours';
+    btn.classList.toggle('quality-mode', _colourMode === 'quality');
+  }
+  if (_lastCodons.length) renderDNA(_lastCodons, _lastCodons.map(c=>c.codon).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Per-codon weights based on E. coli K-12 tRNA gene copy numbers and wobble
 // efficiency. Source: dos Reis et al. 2004 (NAR) + GtRNAdb E. coli K-12.
 // Values normalised to max=1 within each organism.
@@ -1279,13 +1439,14 @@ function renderIssuesCard(dna, codons) {
 function seqSnapshot(dna, codons) {
   const gc = [...dna].filter(n=>n==='G'||n==='C').length;
   const gcPct = dna.length ? ((gc/dna.length)*100).toFixed(1) : 0;
-  const dg = computeDG5prime(dna);
+  const dg  = computeDG5prime(dna);
   const tai = computeTAI(codons);
+  const cai = computeCAI(codons);
   const thresh = parseInt(document.getElementById('rare-thresh').value)||10;
   const rareClusters = findRareClusters(codons, thresh);
   const sdHits = scanInternalSD(dna);
   const hitNames = Object.entries({...RESTRICT_SITES, ...getCustomSites()}).filter(([,v])=>dna.includes(v)).map(([k])=>k);
-  return { dna, codons, gcPct, dg, tai, rareClusters: rareClusters.length, sdHits: sdHits.length, restrictHits: hitNames.length };
+  return { dna, codons, gcPct, dg, tai, cai, rareClusters: rareClusters.length, sdHits: sdHits.length, restrictHits: hitNames.length };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1297,24 +1458,29 @@ function renderVariantsCard(variants) {
   _variants = variants;
   if (variants.length <= 1) { document.getElementById('variants-card').style.display='none'; return; }
 
+  const col = (v, cls) => `style="color:var(--${cls==='ok'?'teal-text':cls==='warn'?'coral-text':'text-primary'})"`;
+
   const rows = variants.map((v,i) => {
-    const dgClass = v.dg > -5 ? 'ok' : v.dg > -10 ? '' : 'warn';
-    const taiClass = v.tai >= 0.5 ? 'ok' : v.tai >= 0.3 ? '' : 'warn';
-    const gcClass = (v.gcPct >= 45 && v.gcPct <= 55) ? 'ok' : (v.gcPct >= 30 && v.gcPct <= 70) ? '' : 'warn';
-    const issuesTotal = v.rareClusters + v.sdHits + v.restrictHits;
+    const dgCls  = v.dg  > -5  ? 'ok' : v.dg  > -10 ? '' : 'warn';
+    const taiCls = v.tai >= 0.5 ? 'ok' : v.tai >= 0.3 ? '' : 'warn';
+    const caiCls = v.cai >= 0.8 ? 'ok' : v.cai >= 0.6 ? '' : 'warn';
+    const gcCls  = (v.gcPct >= 45 && v.gcPct <= 55) ? 'ok' : (v.gcPct >= 30 && v.gcPct <= 70) ? '' : 'warn';
+    const issues = v.rareClusters + v.sdHits + v.restrictHits;
+    const issCls = issues === 0 ? 'ok' : issues <= 2 ? '' : 'warn';
     return `<tr>
       <td><button class="var-select-btn${i===0?' active':''}" id="varbtn-${i}" onclick="selectVariant(${i})">V${i+1}</button></td>
-      <td class="var-mono" style="color:var(--${dgClass==='ok'?'teal-text':dgClass==='warn'?'coral-text':'text-primary'})">${v.dg.toFixed(1)}</td>
-      <td class="var-mono" style="color:var(--${taiClass==='ok'?'teal-text':taiClass==='warn'?'coral-text':'text-primary'})">${v.tai.toFixed(3)}</td>
-      <td class="var-mono" style="color:var(--${gcClass==='ok'?'teal-text':gcClass==='warn'?'coral-text':'text-primary'})">${v.gcPct}%</td>
-      <td class="var-mono" style="color:var(--${issuesTotal===0?'teal-text':issuesTotal<=2?'text-primary':'coral-text'})">${issuesTotal}</td>
+      <td class="var-mono" ${col(v,dgCls)}>${v.dg.toFixed(1)}</td>
+      <td class="var-mono" ${col(v,taiCls)}>${v.tai.toFixed(3)}</td>
+      <td class="var-mono" ${col(v,caiCls)}>${v.cai.toFixed(3)}</td>
+      <td class="var-mono" ${col(v,gcCls)}>${v.gcPct}%</td>
+      <td class="var-mono" ${col(v,issCls)}>${issues}</td>
     </tr>`;
   }).join('');
 
   document.getElementById('variants-body').innerHTML = `
     <table class="variants-table">
       <thead><tr>
-        <th>Variant</th><th>5' ΔG (kcal/mol)</th><th>tAI</th><th>GC%</th><th>Issues</th>
+        <th>Variant</th><th>5' ΔG (kcal/mol)</th><th>tAI</th><th>CAI</th><th>GC%</th><th>Issues</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -1353,8 +1519,9 @@ function renderNativeComparison(optSnap) {
 
   const ngc = [...nativeRaw].filter(c=>c==='G'||c==='C').length;
   const ngcPct = ((ngc/nativeRaw.length)*100).toFixed(1);
-  const ndg = computeDG5prime(nativeRaw);
-  const ntai = computeTAI(nativeCodons);
+  const ndg   = computeDG5prime(nativeRaw);
+  const ntai  = computeTAI(nativeCodons);
+  const ncai  = computeCAI(nativeCodons);
   const nthresh = parseInt(document.getElementById('rare-thresh').value)||10;
   const nrareCl = findRareClusters(nativeCodons, nthresh).length;
   const nsd = scanInternalSD(nativeRaw).length;
@@ -1365,11 +1532,12 @@ function renderNativeComparison(optSnap) {
   }
 
   const rows = [
-    ['GC content', `${ngcPct}%`, `${optSnap.gcPct}%`, cmp(parseFloat(ngcPct), parseFloat(optSnap.gcPct), null)],
-    ['5\' ΔG (kcal/mol)', ndg.toFixed(1), optSnap.dg.toFixed(1), cmp(ndg, optSnap.dg, false)],
-    ['tAI', ntai.toFixed(3), optSnap.tai.toFixed(3), cmp(ntai, optSnap.tai, true)],
-    ['SD sites', nsd, optSnap.sdHits, cmp(nsd, optSnap.sdHits, false)],
-    ['Rare codon clusters', nrareCl, optSnap.rareClusters, cmp(nrareCl, optSnap.rareClusters, false)],
+    ['GC content',          `${ngcPct}%`,        `${optSnap.gcPct}%`,             cmp(parseFloat(ngcPct), parseFloat(optSnap.gcPct), null)],
+    ['5\' ΔG (kcal/mol)',   ndg.toFixed(1),       optSnap.dg.toFixed(1),           cmp(ndg,   optSnap.dg,  false)],
+    ['tAI',                 ntai.toFixed(3),       optSnap.tai.toFixed(3),          cmp(ntai,  optSnap.tai, true)],
+    ['CAI',                 ncai.toFixed(3),       (optSnap.cai||0).toFixed(3),     cmp(ncai,  optSnap.cai||0, true)],
+    ['SD sites',            nsd,                   optSnap.sdHits,                  cmp(nsd,   optSnap.sdHits, false)],
+    ['Rare codon clusters', nrareCl,               optSnap.rareClusters,            cmp(nrareCl, optSnap.rareClusters, false)],
   ];
 
   const rowsHtml = rows.map(([label, natV, optV, cls]) => `
@@ -1579,13 +1747,27 @@ function computeDG5prime(dna) {
 }
 
 function renderDNA(codons, dnaSeq) {
-  const el=document.getElementById('dna-output');
-  el.innerHTML=codons.map((c,i)=>{
-    const col=[...c.codon].map(nt=>`<span class="nt-${nt}">${nt}</span>`).join('');
-    const sep=i<codons.length-1?`<span class="codon-sep"> </span>`:'';
-    return `<span title="${AA_NAMES[c.aa]||c.aa} (${c.aa}) → ${c.codon}">${col}${sep}</span>`;
-  }).join('');
-  el.dataset.raw=dnaSeq;
+  _lastCodons = codons;
+  const el = document.getElementById('dna-output');
+
+  if (_colourMode === 'quality') {
+    // Colour by tAI weight: good=teal, med=amber, poor=red
+    el.innerHTML = codons.map((c,i) => {
+      const w = TAI_W[c.codon] ?? 0.2;
+      const cls = w >= 0.6 ? 'cq-good' : w >= 0.3 ? 'cq-med' : 'cq-poor';
+      const sep = i < codons.length-1 ? `<span class="codon-sep"> </span>` : '';
+      const label = w >= 0.6 ? 'High tAI' : w >= 0.3 ? 'Medium tAI' : 'Low tAI';
+      return `<span class="${cls}" title="${AA_NAMES[c.aa]||c.aa} (${c.aa}) → ${c.codon} · ${label} (${w.toFixed(2)})">${c.codon}${sep}</span>`;
+    }).join('');
+  } else {
+    // Default: colour by nucleotide identity
+    el.innerHTML = codons.map((c,i) => {
+      const col = [...c.codon].map(nt=>`<span class="nt-${nt}">${nt}</span>`).join('');
+      const sep = i < codons.length-1 ? `<span class="codon-sep"> </span>` : '';
+      return `<span title="${AA_NAMES[c.aa]||c.aa} (${c.aa}) → ${c.codon}">${col}${sep}</span>`;
+    }).join('');
+  }
+  el.dataset.raw = dnaSeq;
 }
 
 function renderStats(dna, codons) {
@@ -1633,6 +1815,14 @@ function renderStats(dna, codons) {
   if (taiEl && tai > 0) {
     taiEl.textContent = tai.toFixed(3);
     taiEl.className = 'stat-value ' + (tai>=0.5?'ok':tai>=0.3?'':'warn');
+  }
+
+  // CAI
+  const cai = computeCAI(codons || []);
+  const caiEl = document.getElementById('stat-cai');
+  if (caiEl && cai > 0) {
+    caiEl.textContent = cai.toFixed(3);
+    caiEl.className = 'stat-value ' + (cai>=0.8?'ok':cai>=0.6?'':'warn');
   }
 
   // 5' ΔG via nearest-neighbour RNA folding
@@ -1736,12 +1926,17 @@ function clearAll() {
   document.getElementById('stat-dg5').textContent='—';
   document.getElementById('dg5-note').innerHTML='';
   document.getElementById('stat-tai').textContent='—';
+  document.getElementById('stat-cai').textContent='—';
+  const pp = document.getElementById('prot-props'); if(pp){pp.innerHTML='';pp.classList.remove('show');}
   const ic = document.getElementById('issues-count'); if(ic) ic.textContent='';
   _variants = [];
 }
 function loadExample() {
-  document.getElementById('aa-input').value='MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK';
-  document.getElementById('fasta-name').value='sfGFP_ecoli_optimized';
+  const seq = 'MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK';
+  document.getElementById('aa-input').value = seq;
+  document.getElementById('aa-count').textContent = seq.length + ' aa';
+  document.getElementById('fasta-name').value = 'sfGFP_ecoli_optimized';
+  renderProteinProps(seq);
   optimize();
 }
 
@@ -1763,7 +1958,9 @@ function toggleDark() {
 })();
 
 document.getElementById('aa-input').addEventListener('input',function(){
-  document.getElementById('aa-count').textContent=(this.value.trim().toUpperCase().replace(/\s+/g,'').length||0)+' aa';
+  const raw = this.value.trim().toUpperCase().replace(/\s+/g,'');
+  document.getElementById('aa-count').textContent=(raw.length||0)+' aa';
+  renderProteinProps(raw);
 });
 
 updateStrategyInfo();
