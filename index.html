@@ -212,6 +212,84 @@
   /* ── OPTIONS ── */
   .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
   @media (max-width: 400px) { .opts-grid { grid-template-columns: 1fr; } }
+  .opts-3 { grid-template-columns: 1fr 1fr 1fr !important; }
+  @media (max-width: 520px) { .opts-3 { grid-template-columns: 1fr !important; } }
+
+  /* ── ADVANCED SETTINGS ── */
+  .adv-toggle {
+    margin-top: 10px; padding: 7px 0; font-size: 11px; color: var(--text-secondary);
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    border-top: 0.5px solid var(--border-lo); user-select: none; transition: color .15s;
+  }
+  .adv-toggle:hover { color: var(--teal-text); }
+  .adv-body { display: none; flex-direction: column; gap: 10px; padding: 10px 0 4px; }
+  .adv-body.open { display: flex; }
+  .adv-row { display: flex; flex-direction: column; gap: 4px; }
+  .adv-label { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+  .adv-input {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-primary);
+    background: var(--bg-primary); border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-md); padding: 6px 10px; outline: none;
+    transition: border-color .15s; width: 100%;
+  }
+  .adv-input:focus { border-color: var(--border-hi); }
+  .adv-input::placeholder { color: var(--border-hi); font-style: italic; }
+  .adv-textarea {
+    font-family: var(--font-mono); font-size: 11px; background: var(--seq-bg);
+    border: none; border-radius: var(--radius-md); color: var(--seq-text);
+    padding: 8px 10px; resize: vertical; outline: none;
+    width: 100%; height: 64px; letter-spacing: .04em; caret-color: var(--seq-text);
+  }
+  .adv-textarea::placeholder { color: var(--seq-ph); font-style: italic; }
+  .slider-row { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+  .slider { flex: 1; accent-color: var(--teal-dot); cursor: pointer; }
+  .slider-val { font-family: var(--font-mono); font-size: 11px; color: var(--teal-text); min-width: 36px; text-align: right; }
+
+  /* ── GC WINDOW CHART ── */
+  #gc-chart-wrap svg { width: 100%; display: block; }
+  .gc-chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 10px; color: var(--text-secondary); }
+  .gcl-item { display: flex; align-items: center; gap: 5px; }
+  .gcl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── ISSUES CARD ── */
+  .issues-section { margin-bottom: 14px; }
+  .issues-section:last-child { margin-bottom: 0; }
+  .issues-section-title { font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; }
+  .issue-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; margin-bottom: 5px;
+    background: var(--bg-secondary); border: 0.5px solid var(--border-lo);
+    border-radius: var(--radius-md); font-size: 12px; color: var(--text-secondary);
+  }
+  .issue-item:last-child { margin-bottom: 0; }
+  .issue-badge { font-family: var(--font-mono); font-size: 10px; padding: 2px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .issue-badge-warn { background: var(--red-bg); border: 0.5px solid var(--red-border); color: var(--red-label); }
+  .issue-badge-caution { background: #fff8ec; border: 0.5px solid #f0c87a; color: #8a5c00; }
+  body.dark .issue-badge-caution { background: #2a200a; border-color: #6a4800; color: #c89030; }
+  .issue-ok { font-size: 12px; color: var(--teal-text); padding: 8px 10px; background: var(--teal-bg); border: 0.5px solid var(--teal-border); border-radius: var(--radius-md); }
+
+  /* ── VARIANTS TABLE ── */
+  .variants-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .variants-table th { text-align: left; font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); padding: 0 12px 8px 0; }
+  .variants-table td { padding: 8px 12px 8px 0; border-top: 0.5px solid var(--border-lo); color: var(--text-primary); vertical-align: middle; }
+  .var-select-btn {
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500; padding: 4px 12px;
+    border-radius: var(--radius-md); background: none; border: 0.5px solid var(--border-mid);
+    color: var(--text-secondary); cursor: pointer; transition: all .15s;
+  }
+  .var-select-btn:hover, .var-select-btn.active { background: var(--teal-btn); border-color: var(--teal-btn); color: #fff; }
+  .var-mono { font-family: var(--font-mono); font-size: 11px; }
+
+  /* ── NATIVE COMPARISON ── */
+  .native-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 500px) { .native-compare { grid-template-columns: 1fr; } }
+  .native-col { background: var(--bg-secondary); border: 0.5px solid var(--border-lo); border-radius: var(--radius-md); padding: 12px 14px; }
+  .native-col-title { font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; }
+  .native-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 0.5px solid var(--border-lo); font-size: 12px; }
+  .native-stat:last-child { border-bottom: none; }
+  .native-stat-label { color: var(--text-secondary); }
+  .native-stat-val { font-family: var(--font-mono); color: var(--text-primary); font-size: 11px; }
+  .native-stat-val.better { color: var(--teal-text); }
+  .native-stat-val.worse  { color: var(--coral-text); }
 
   select {
     width: 100%; font-family: var(--font-sans); font-size: 12px;
@@ -266,24 +344,38 @@
   .stats-strip {
     display: none; background: var(--bg-primary);
     border: 0.5px solid var(--border-lo);
-    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 10px;
+    border-radius: var(--radius-lg); margin-bottom: 10px;
   }
   .stats-strip.show { display: block; }
-  .stats-top { display: flex; }
+  .stats-top {
+    display: flex;
+    flex-wrap: wrap;        /* allow wrapping onto a second row */
+    border-bottom: 0.5px solid var(--border-lo);
+  }
   .stat-item {
-    flex: 1; padding: 12px 16px;
+    flex: 1 1 130px;        /* grow/shrink, but never below 130 px */
+    min-width: 130px;
+    padding: 12px 14px;
     border-right: 0.5px solid var(--border-lo);
+    border-bottom: 0.5px solid var(--border-lo);
     background: var(--bg-secondary);
   }
+  /* Remove right border on every item that wraps to end of a row */
   .stat-item:last-child { border-right: none; }
   .stat-label {
-    font-size: 10px; font-weight: 500; letter-spacing: .08em;
+    font-size: 10px; font-weight: 500; letter-spacing: .06em;
     text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .stat-value { font-size: 22px; font-weight: 500; color: var(--text-primary); line-height: 1; }
-  .stat-unit { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .stat-value { font-size: 20px; font-weight: 500; color: var(--text-primary); line-height: 1; }
+  .stat-unit { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
   .stat-value.warn { color: var(--coral-text); }
   .stat-value.ok   { color: var(--teal-text); }
+  .stat-desc {
+    font-size: 10px; color: var(--text-secondary); line-height: 1.4;
+    margin-top: 5px; padding-top: 5px;
+    border-top: 0.5px solid var(--border-lo);
+  }
 
   /* GC bar */
   .gc-row {
@@ -355,19 +447,21 @@
   .strategy-info.show { display: block; }
   .strategy-info strong { font-weight: 500; }
 
-  .stat-item-restrict { min-width: 0; }
-  .restrict-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .stat-item-restrict { min-width: 140px; }
+  .restrict-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; max-width: 100%; }
   .restrict-chip {
     font-family: var(--font-mono); font-size: 10px;
     padding: 2px 7px; border-radius: 20px;
     background: var(--red-bg); border: 0.5px solid var(--red-border);
     color: var(--red-label); white-space: nowrap;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis;
   }
   .restrict-chip-ok {
     font-family: var(--font-mono); font-size: 10px;
     padding: 2px 7px; border-radius: 20px;
     background: var(--teal-bg); border: 0.5px solid var(--teal-border);
     color: var(--teal-text); white-space: nowrap;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis;
   }
   @keyframes flashGreen { 0% { outline: 2px solid var(--teal-dot); } 100% { outline: 2px solid transparent; } }
   .flash { animation: flashGreen 0.5s ease; }
@@ -470,34 +564,46 @@
         <div class="stat-label">Length</div>
         <div class="stat-value" id="stat-len">—</div>
         <div class="stat-unit">nucleotides</div>
+        <div class="stat-desc">Total coding sequence length including stop codon (if added).</div>
       </div>
       <div class="stat-item">
         <div class="stat-label">GC Content</div>
         <div class="stat-value" id="stat-gc">—</div>
-        <div class="stat-unit">%</div>
+        <div class="stat-unit">% · target 45–55%</div>
+        <div class="stat-desc">Extremes (&lt;30% or &gt;70%) cause mRNA instability and synthesis failure.</div>
       </div>
       <div class="stat-item">
         <div class="stat-label">Codons</div>
         <div class="stat-value" id="stat-codons">—</div>
         <div class="stat-unit">triplets</div>
+        <div class="stat-desc">Number of codon positions assigned during optimization.</div>
       </div>
       <div class="stat-item stat-item-restrict">
         <div class="stat-label">Restriction Hits</div>
         <div class="stat-value" id="stat-restrict">—</div>
         <div class="stat-unit" id="stat-restrict-unit">sites found</div>
         <div class="restrict-chips" id="restrict-chips"></div>
+        <div class="stat-desc">Recognition sequences for common cloning and Golden Gate enzymes present in the CDS.</div>
       </div>
       <div class="stat-item stat-item-restrict">
         <div class="stat-label">Longest Homopolymer</div>
         <div class="stat-value" id="stat-homopoly">—</div>
         <div class="stat-unit" id="stat-homopoly-unit">nucleotides</div>
         <div class="restrict-chips" id="homopoly-chips"></div>
+        <div class="stat-desc">Runs of identical nucleotides. Poly-G/C ≥5 nt or poly-A/T ≥8 nt risk synthesis errors.</div>
       </div>
       <div class="stat-item stat-item-restrict">
         <div class="stat-label">5' ΔG <span style="font-weight:400;text-transform:none;letter-spacing:0">(first 70 nt)</span></div>
         <div class="stat-value" id="stat-dg5">—</div>
         <div class="stat-unit">kcal/mol · lower = more structure</div>
         <div class="restrict-chips" id="dg5-note"></div>
+        <div class="stat-desc">mRNA folding energy at the N-terminal region. Strong hairpins block ribosome loading regardless of CAI. Computed with nearest-neighbour DP (Turner 2004).</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">tAI</div>
+        <div class="stat-value" id="stat-tai">—</div>
+        <div class="stat-unit">target &gt; 0.50</div>
+        <div class="stat-desc">tRNA Adaptation Index — geometric mean of per-codon tRNA availability weights (dos Reis 2004). Reflects how well codon usage matches the <em>E. coli</em> tRNA pool. Highly expressed endogenous genes score 0.5–0.7.</div>
       </div>
     </div>
     <div class="gc-row">
@@ -528,7 +634,7 @@
         <div id="error-msg" class="error-msg">
           ⚠ Invalid characters: <span id="invalid-chars"></span>. Only standard single-letter codes accepted.
         </div>
-        <div class="opts-grid">
+        <div class="opts-grid opts-3">
           <select id="strategy-select" onchange="updateStrategyInfo()">
             <option value="top">Most preferred codon</option>
             <option value="weighted" selected>Weighted random (rare excluded)</option>
@@ -540,6 +646,11 @@
             <option value="TAG">Stop codon: TAG</option>
             <option value="none">No stop codon</option>
           </select>
+          <select id="variant-count">
+            <option value="1">1 sequence</option>
+            <option value="3">3 variants</option>
+            <option value="5">5 variants</option>
+          </select>
         </div>
         <div class="strategy-info" id="strategy-info"></div>
         <div class="toggle-row" onclick="toggleOption('restrict')">
@@ -549,6 +660,34 @@
         <div class="toggle-row" onclick="toggleOption('homopoly')">
           <div class="toggle-pill" id="toggle-homopoly"></div>
           Break homopolymer runs ≥ 5 nt (poly-G/C) and ≥ 8 nt (poly-A/T)
+        </div>
+        <div class="toggle-row" onclick="toggleOption('ramp')">
+          <div class="toggle-pill" id="toggle-ramp"></div>
+          N-terminal codon ramp — use slower codons for first 5 positions (aids co-translational folding)
+        </div>
+        <div class="adv-toggle" onclick="toggleAdv()">
+          ⚙ Advanced settings <span id="adv-arrow">▾</span>
+        </div>
+        <div class="adv-body" id="adv-body">
+          <div class="adv-row">
+            <div class="adv-label">Rare codon threshold — codons below this frequency are excluded from weighted sampling</div>
+            <div class="slider-row">
+              <input type="range" class="slider" id="rare-thresh" min="5" max="20" value="10" step="1" oninput="document.getElementById('rare-thresh-val').textContent=this.value+'%'">
+              <span class="slider-val" id="rare-thresh-val">10%</span>
+            </div>
+          </div>
+          <div class="adv-row">
+            <div class="adv-label">Exclude specific codons from selection (comma-separated)</div>
+            <input type="text" class="adv-input" id="excl-codons" placeholder="e.g. AGG, AGA, CGA, ATA">
+          </div>
+          <div class="adv-row">
+            <div class="adv-label">Custom restriction sites to avoid (Name:SEQUENCE, comma-separated)</div>
+            <input type="text" class="adv-input" id="custom-sites" placeholder="e.g. MyEnz:GTATAC, AnotherEnz:GCATGC">
+          </div>
+          <div class="adv-row">
+            <div class="adv-label">Native / source gene DNA — paste for side-by-side comparison</div>
+            <textarea class="adv-textarea" id="native-seq" placeholder="Paste native gene coding sequence (DNA, 5'→3')…" spellcheck="false"></textarea>
+          </div>
         </div>
         <div class="actions">
           <button class="btn-primary" onclick="optimize()">Optimize →</button>
@@ -614,6 +753,56 @@
     </div>
   </div>
 
+  <!-- GC WINDOW CHART -->
+  <div class="card" id="gc-chart-card" style="display:none">
+    <div class="card-top">
+      <div class="card-dot"></div>
+      <span>GC content · 20 nt rolling window</span>
+    </div>
+    <div class="card-body" style="padding-bottom:8px">
+      <div id="gc-chart-wrap"></div>
+      <div class="gc-chart-legend">
+        <span class="gcl-item"><span class="gcl-dot" style="background:var(--red-label)"></span>&lt;30% or &gt;70% (problematic)</span>
+        <span class="gcl-item"><span class="gcl-dot" style="background:var(--teal-dot)"></span>30–55% (optimal)</span>
+        <span class="gcl-item"><span class="gcl-dot" style="background:var(--coral-text)"></span>55–70% (caution)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEQUENCE ISSUES -->
+  <div class="card" id="issues-card" style="display:none">
+    <div class="card-top">
+      <div class="card-dot coral"></div>
+      <span>Sequence issues · internal SD sites &amp; rare codon clusters</span>
+      <span class="card-count" id="issues-count"></span>
+    </div>
+    <div class="card-body">
+      <div id="issues-body"></div>
+    </div>
+  </div>
+
+  <!-- SEQUENCE VARIANTS -->
+  <div class="card" id="variants-card" style="display:none">
+    <div class="card-top">
+      <div class="card-dot"></div>
+      <span>Sequence variants · select the best combination of properties</span>
+    </div>
+    <div class="card-body">
+      <div id="variants-body"></div>
+    </div>
+  </div>
+
+  <!-- NATIVE COMPARISON -->
+  <div class="card" id="native-card" style="display:none">
+    <div class="card-top">
+      <div class="card-dot"></div>
+      <span>Native vs optimized · sequence property comparison</span>
+    </div>
+    <div class="card-body">
+      <div id="native-body"></div>
+    </div>
+  </div>
+
   <footer>
     Codon usage: <em>E. coli</em> K-12 MG1655 (Kazusa Codon Usage Database · GenBank Release 260) ·
     Strategies: most-preferred, frequency-weighted, rare-codon harmonized · For research use only
@@ -674,7 +863,7 @@ const RESTRICT_SITES = {
   'BtgZI':'GCGATG','BtgZI_rc':'CATCGC',
 };
 
-const options = { restrict: false, homopoly: false };
+const options = { restrict: false, homopoly: false, ramp: false };
 function toggleOption(key) {
   options[key] = !options[key];
   document.getElementById('toggle-'+key).classList.toggle('on', options[key]);
@@ -682,8 +871,8 @@ function toggleOption(key) {
 
 const STRATEGY_INFO = {
   top: '<strong>Most preferred:</strong> Always picks the single highest-frequency codon for every amino acid. Maximises expression bias but creates a repetitive sequence — the ribosome can stall if it repeatedly depletes a single tRNA pool, and sequence repetition can promote mRNA secondary structure.',
-  weighted: '<strong>Weighted random (rare excluded):</strong> Samples proportionally from the E. coli codon frequency distribution, but first removes any codon used less than 10% of the time. This mirrors the natural variation in codon usage the ribosome expects, avoiding tRNA depletion stalls, while never risking a rare codon (e.g. Arg AGA 4%, Leu CTA 4%) that would cause pausing or frameshifting. <strong>Recommended for most expression work.</strong>',
-  harmonized: '<strong>Harmonized:</strong> Like most-preferred, but rare codons (< 10% usage) are excluded before picking. In practice gives the same result as most-preferred for the majority of amino acids — the difference is that synonymous codons at the bottom of a large family (e.g. Arg AGA/AGG, Leu CTA) can never be selected, even accidentally.',
+  weighted: '<strong>Weighted random (rare excluded):</strong> Samples proportionally from the E. coli codon frequency distribution, but first removes any codon used less than the rare-codon threshold. This mirrors the natural variation in codon usage the ribosome expects, avoiding tRNA depletion stalls. <strong>Recommended for most expression work.</strong>',
+  harmonized: '<strong>Harmonized:</strong> Like most-preferred, but rare codons below the threshold are excluded before picking. Deterministic (same result each run).',
 };
 
 function updateStrategyInfo() {
@@ -693,18 +882,51 @@ function updateStrategyInfo() {
   box.classList.toggle('show', !!STRATEGY_INFO[val]);
 }
 
-function pickCodon(aa, strategy) {
-  const codons = CODON_TABLE[aa]; if (!codons) return null;
-  if (strategy==='top') return codons.reduce((b,c)=>c[1]>b[1]?c:b)[0];
-  // Both weighted and harmonized exclude rare codons (<10%); weighted then samples proportionally
-  const pool = codons.filter(c=>c[1]>=0.10);
+function pickCodon(aa, strategy, rampMode, excluded) {
+  let codons = CODON_TABLE[aa]; if (!codons) return null;
+  if (excluded && excluded.size) {
+    const filtered = codons.filter(c => !excluded.has(c[0]));
+    if (filtered.length) codons = filtered;
+  }
+  const thresh = (parseInt(document.getElementById('rare-thresh')?.value) || 10) / 100;
+  if (strategy==='top') {
+    if (rampMode) { const s=codons.slice().sort((a,b)=>b[1]-a[1]); return (s[1]||s[0])[0]; }
+    return codons.reduce((b,c)=>c[1]>b[1]?c:b)[0];
+  }
+  const pool = codons.filter(c=>c[1]>=thresh);
   const safe = pool.length ? pool : codons;
-  if (strategy==='harmonized') return safe.reduce((b,c)=>c[1]>b[1]?c:b)[0];
-  // weighted: proportional sampling from safe pool (renormalised)
+  if (strategy==='harmonized') {
+    if (rampMode) { const s=safe.slice().sort((a,b)=>b[1]-a[1]); return (s[1]||s[0])[0]; }
+    return safe.reduce((b,c)=>c[1]>b[1]?c:b)[0];
+  }
+  if (rampMode) {
+    const best=safe.reduce((b,c)=>c[1]>b[1]?c:b)[0];
+    const p2=safe.filter(c=>c[0]!==best); const useP=p2.length?p2:safe;
+    const tot2=useP.reduce((s,c)=>s+c[1],0); let r2=Math.random()*tot2;
+    for (const [codon,freq] of useP){r2-=freq;if(r2<=0)return codon;}
+    return useP[useP.length-1][0];
+  }
   const total = safe.reduce((s,c)=>s+c[1], 0);
   let r=Math.random()*total;
   for (const [codon,freq] of safe) { r-=freq; if(r<=0) return codon; }
   return safe[safe.length-1][0];
+}
+
+function buildVariant(raw, strategy, stopSel) {
+  const excluded = getExcludedCodons();
+  const customSites = getCustomSites();
+  const allSites = { ...RESTRICT_SITES, ...customSites };
+  const RAMP_LEN = options.ramp ? 5 : 0;
+  let codons = [];
+  for (let i=0; i<raw.length; i++) {
+    const c = pickCodon(raw[i], strategy, i < RAMP_LEN, excluded);
+    if (c) codons.push({aa:raw[i], codon:c});
+  }
+  if (stopSel !== 'none') codons.push({aa:'*', codon:stopSel});
+  let dnaSeq = codons.map(c=>c.codon).join('');
+  if (options.restrict) dnaSeq = avoidSitesAll(codons, dnaSeq, allSites);
+  if (options.homopoly) dnaSeq = breakHomopolymers(codons, dnaSeq);
+  return { codons, dnaSeq };
 }
 
 function optimize() {
@@ -716,26 +938,32 @@ function optimize() {
   if (invalid.length) { invalEl.textContent=invalid.join(', '); errEl.classList.add('show'); return; }
   errEl.classList.remove('show');
 
-  const strategy=document.getElementById('strategy-select').value;
-  const stopSel=document.getElementById('stop-select').value;
-  let codons=[];
-  for (const aa of raw) { const c=pickCodon(aa,strategy); if(c) codons.push({aa,codon:c}); }
-  if (stopSel!=='none') codons.push({aa:'*',codon:stopSel});
-  let dnaSeq=codons.map(c=>c.codon).join('');
-  if (options.restrict)  dnaSeq=avoidSites(codons,dnaSeq);
-  if (options.homopoly)  dnaSeq=breakHomopolymers(codons,dnaSeq);
+  const strategy  = document.getElementById('strategy-select').value;
+  const stopSel   = document.getElementById('stop-select').value;
+  const nVariants = parseInt(document.getElementById('variant-count').value) || 1;
 
-  renderDNA(codons,dnaSeq);
-  renderStats(dnaSeq);
+  const variants = [];
+  for (let i=0; i<nVariants; i++) {
+    const { codons, dnaSeq } = buildVariant(raw, strategy, stopSel);
+    variants.push(seqSnapshot(dnaSeq, codons));
+  }
+
+  const primary = variants[0];
+  renderDNA(primary.codons, primary.dna);
+  renderStats(primary.dna, primary.codons);
   renderAAStrip(raw);
-  renderCodonComparison(codons);
+  renderCodonComparison(primary.codons);
+  renderGCChart(primary.dna);
+  renderIssuesCard(primary.dna, primary.codons);
+  renderVariantsCard(variants);
+  renderNativeComparison(primary);
   document.getElementById('stats-strip').classList.add('show');
   document.getElementById('aa-annot-card').style.display='block';
-  document.getElementById('nt-count').textContent=dnaSeq.length+' nt';
+  document.getElementById('nt-count').textContent=primary.dna.length+' nt';
 }
 
-function avoidSites(codons, seq) {
-  for (const [,site] of Object.entries(RESTRICT_SITES)) {
+function avoidSitesAll(codons, seq, sites) {
+  for (const [,site] of Object.entries(sites)) {
     let tries=0;
     while (seq.includes(site)&&tries++<30) {
       const idx=Math.floor(seq.indexOf(site)/3);
@@ -748,6 +976,8 @@ function avoidSites(codons, seq) {
   }
   return seq;
 }
+
+function avoidSites(codons, seq) { return avoidSitesAll(codons, seq, RESTRICT_SITES); }
 
 // Find the longest homopolymer run: returns {nt, len, pos} or null
 function longestRun(seq) {
@@ -809,6 +1039,389 @@ function breakHomopolymers(codons, seq) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// tRNA ADAPTATION INDEX (tAI)
+// Per-codon weights based on E. coli K-12 tRNA gene copy numbers and wobble
+// efficiency. Source: dos Reis et al. 2004 (NAR) + GtRNAdb E. coli K-12.
+// Values normalised to max=1 within each organism.
+// ═══════════════════════════════════════════════════════════════════════════
+const TAI_W = {
+  TTT:0.271,TTC:1.000,                                               // Phe
+  TTA:0.068,TTG:0.234,CTT:0.250,CTC:0.250,CTA:0.068,CTG:1.000,     // Leu
+  ATT:0.571,ATC:0.714,ATA:0.071,                                     // Ile
+  ATG:1.000,                                                          // Met
+  GTT:0.429,GTC:0.429,GTA:0.286,GTG:0.857,                          // Val
+  TCT:0.357,TCC:0.357,TCA:0.214,TCG:0.214,AGT:0.357,AGC:1.000,     // Ser
+  CCT:0.250,CCC:0.167,CCA:0.250,CCG:1.000,                          // Pro
+  ACT:0.286,ACC:1.000,ACA:0.571,ACG:0.571,                          // Thr
+  GCT:0.333,GCC:0.500,GCA:0.500,GCG:1.000,                          // Ala
+  TAT:0.250,TAC:1.000,                                               // Tyr
+  CAT:0.250,CAC:1.000,                                               // His
+  CAA:0.500,CAG:1.000,                                               // Gln
+  AAT:0.286,AAC:1.000,                                               // Asn
+  AAA:1.000,AAG:0.500,                                               // Lys
+  GAT:0.500,GAC:1.000,                                               // Asp
+  GAA:1.000,GAG:0.500,                                               // Glu
+  TGT:0.200,TGC:1.000,                                               // Cys
+  TGG:1.000,                                                          // Trp
+  CGT:1.000,CGC:1.000,CGA:0.250,CGG:0.500,AGA:0.125,AGG:0.125,     // Arg
+  GGT:0.500,GGC:1.000,GGA:0.143,GGG:0.429,                          // Gly
+};
+
+function computeTAI(codons) {
+  // Geometric mean of per-codon tAI weights, excluding stop codon
+  const skip = new Set(['*']);
+  let logSum = 0, n = 0;
+  for (const {aa, codon} of codons) {
+    if (skip.has(aa)) continue;
+    const w = TAI_W[codon];
+    if (!w) continue;
+    logSum += Math.log(w);
+    n++;
+  }
+  return n > 0 ? Math.exp(logSum / n) : 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERNAL SHINE-DALGARNO SCANNER
+// Scans CDS for sequences complementary to the 16S rRNA anti-SD region.
+// Flags matches as strong (GGAGG, AGGAG, GAGG, AAGG, AGGA) with a
+// warning if an internal ATG follows 5–15 nt downstream (cryptic start).
+// ═══════════════════════════════════════════════════════════════════════════
+function scanInternalSD(dna) {
+  const hits = [];
+  // SD motifs ordered strongest first; score = complementarity strength
+  const MOTIFS = [
+    {m:'GGAGG',s:5}, {m:'AGGAG',s:4}, {m:'GAGGAG',s:5},
+    {m:'AAGGAG',s:4}, {m:'GAGGA',s:3},
+    {m:'GAGG',s:3}, {m:'AAGG',s:2}, {m:'AGGA',s:2}, {m:'GGAG',s:2},
+  ];
+  const seen = new Set();
+  for (const {m, s} of MOTIFS) {
+    let idx = 0;
+    while ((idx = dna.indexOf(m, idx)) !== -1) {
+      // Skip position 0 (the intended ATG is at codon 1)
+      if (idx > 3 && !seen.has(idx)) {
+        seen.add(idx);
+        // Check for downstream ATG within 5–15 nt
+        const downstream = dna.slice(idx + m.length, idx + m.length + 15);
+        const atgOffset = downstream.indexOf('ATG');
+        hits.push({
+          pos: idx, motif: m, score: s,
+          hasATG: atgOffset >= 2 && atgOffset <= 12,
+          atgPos: atgOffset >= 2 && atgOffset <= 12 ? idx + m.length + atgOffset : null,
+        });
+      }
+      idx += 1;
+    }
+  }
+  return hits.sort((a,b) => a.pos - b.pos);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RARE CODON CLUSTER DETECTOR
+// Finds runs of 2+ consecutive rare codons (below the usage threshold).
+// ═══════════════════════════════════════════════════════════════════════════
+function findRareClusters(codons, threshPct) {
+  const thresh = (threshPct || 10) / 100;
+  // Mark each codon as rare
+  const rare = codons.map(({aa, codon}) => {
+    if (aa === '*') return false;
+    const entry = (CODON_TABLE[aa] || []).find(e => e[0] === codon);
+    return entry ? entry[1] < thresh : false;
+  });
+  const clusters = [];
+  let i = 0;
+  while (i < rare.length) {
+    if (rare[i]) {
+      let j = i;
+      while (j < rare.length && rare[j]) j++;
+      if (j - i >= 2) clusters.push({ start: i, end: j-1, codons: codons.slice(i,j) });
+      i = j;
+    } else i++;
+  }
+  return clusters;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLIDING GC CHART (SVG)
+// ═══════════════════════════════════════════════════════════════════════════
+function renderGCChart(dna) {
+  const WIN = 20, W = 800, H = 110, PAD = {l:36,r:10,t:8,b:22};
+  const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+
+  // Compute rolling GC%
+  const gc = [];
+  for (let i = 0; i <= dna.length - WIN; i++) {
+    const w = dna.slice(i, i+WIN);
+    gc.push([...w].filter(c=>c==='G'||c==='C').length / WIN * 100);
+  }
+  if (!gc.length) return;
+
+  const xScale = cW / (gc.length - 1 || 1);
+  const yScale = v => cH * (1 - v/100);
+
+  const toSVG = (x,y) => `${PAD.l + x*xScale},${PAD.t + yScale(y)}`;
+
+  // Colour bands
+  const bands = [
+    {y1:70,y2:100,fill:'rgba(200,50,50,0.07)'},
+    {y1:55,y2:70, fill:'rgba(220,130,0,0.07)'},
+    {y1:30,y2:55, fill:'rgba(29,158,117,0.06)'},
+    {y1:0, y2:30, fill:'rgba(200,50,50,0.07)'},
+  ];
+
+  // Line path
+  const pts = gc.map((v,i) => (i===0?'M':'L')+toSVG(i,v)).join(' ');
+
+  // Colour of the line at each segment
+  function lineColor(v) {
+    if (v > 70 || v < 30) return 'var(--red-label)';
+    if (v > 55) return 'var(--warn2)';
+    return 'var(--teal-dot)';
+  }
+
+  // Y axis labels
+  const yLabels = [0,30,50,70,100].map(v => `
+    <text x="${PAD.l - 4}" y="${PAD.t + yScale(v) + 4}" text-anchor="end" font-size="9" fill="var(--text-secondary)">${v}%</text>
+    <line x1="${PAD.l}" y1="${PAD.t + yScale(v)}" x2="${PAD.l+cW}" y2="${PAD.t + yScale(v)}" stroke="var(--border-lo)" stroke-width="0.5" stroke-dasharray="${v===50?'0':'3,3'}"/>
+  `).join('');
+
+  // X axis ticks
+  const tickEvery = gc.length > 300 ? 100 : gc.length > 100 ? 50 : 20;
+  const xTicks = [];
+  for (let i=0; i<gc.length; i+=tickEvery) {
+    const x = PAD.l + i*xScale;
+    xTicks.push(`<text x="${x}" y="${H-4}" text-anchor="middle" font-size="9" fill="var(--text-secondary)">${i+WIN/2|0}</text>`);
+  }
+
+  // Build multi-colour polyline segments
+  const segments = gc.map((v,i,a) => {
+    if (i===0) return '';
+    const col = lineColor((v+a[i-1])/2);
+    return `<line x1="${PAD.l+(i-1)*xScale}" y1="${PAD.t+yScale(a[i-1])}" x2="${PAD.l+i*xScale}" y2="${PAD.t+yScale(v)}" stroke="${col}" stroke-width="1.5"/>`;
+  }).join('');
+
+  const bandsSVG = bands.map(({y1,y2,fill}) =>
+    `<rect x="${PAD.l}" y="${PAD.t+yScale(y2)}" width="${cW}" height="${yScale(y1)-yScale(y2)}" fill="${fill}"/>`
+  ).join('');
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+    ${bandsSVG}${yLabels}${segments}${xTicks.join('')}
+    <text x="${PAD.l+cW/2}" y="${H-2}" text-anchor="middle" font-size="9" fill="var(--text-secondary)">Nucleotide position</text>
+  </svg>`;
+
+  const wrap = document.getElementById('gc-chart-wrap');
+  wrap.innerHTML = svg;
+  document.getElementById('gc-chart-card').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ISSUES CARD RENDERER
+// ═══════════════════════════════════════════════════════════════════════════
+function renderIssuesCard(dna, codons) {
+  const thresh = parseInt(document.getElementById('rare-thresh').value) || 10;
+  const sdHits = scanInternalSD(dna);
+  const rareClusters = findRareClusters(codons, thresh);
+
+  const totalIssues = sdHits.length + rareClusters.length;
+  document.getElementById('issues-count').textContent = totalIssues ? `${totalIssues} issues found` : 'no issues';
+
+  let html = '';
+
+  // SD section
+  html += `<div class="issues-section">
+    <div class="issues-section-title">Internal Shine-Dalgarno sites (ribosome pausing / cryptic start risk)</div>`;
+  if (!sdHits.length) {
+    html += `<div class="issue-ok">✓ No internal SD-like sequences detected</div>`;
+  } else {
+    html += sdHits.map(h => {
+      const severity = h.score >= 4 ? 'warn' : 'caution';
+      const strength = h.score >= 5 ? 'Very strong' : h.score >= 4 ? 'Strong' : 'Moderate';
+      const atgNote = h.hasATG ? ` — ⚠ ATG at nt ${h.atgPos+1} (potential cryptic start)` : '';
+      return `<div class="issue-item">
+        <span class="issue-badge issue-badge-${severity}">${h.motif}</span>
+        <div>
+          <div style="color:var(--text-primary);font-weight:500">${strength} SD motif at nt ${h.pos+1}${atgNote}</div>
+          <div class="issue-pos">Sequence context: …${dna.slice(Math.max(0,h.pos-4),h.pos+h.motif.length+8)}…</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  html += `</div>`;
+
+  // Rare cluster section
+  html += `<div class="issues-section">
+    <div class="issues-section-title">Rare codon clusters (consecutive codons below ${thresh}% usage — ribosome stall risk)</div>`;
+  if (!rareClusters.length) {
+    html += `<div class="issue-ok">✓ No rare codon clusters detected at ${thresh}% threshold</div>`;
+  } else {
+    html += rareClusters.map(cl => {
+      const seqStr = cl.codons.map(c=>`<span class="nt-A">${c.codon}</span>`).join(' ');
+      const aas = cl.codons.map(c=>c.aa).join('');
+      return `<div class="issue-item">
+        <span class="issue-badge issue-badge-warn">${cl.end-cl.start+1} codons</span>
+        <div>
+          <div style="color:var(--text-primary);font-weight:500">Rare cluster at codons ${cl.start+1}–${cl.end+1} (AA: ${aas})</div>
+          <div class="issue-pos" style="font-family:var(--font-mono);font-size:10px;margin-top:3px">${seqStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  html += `</div>`;
+
+  document.getElementById('issues-body').innerHTML = html;
+  document.getElementById('issues-card').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEQUENCE PROPERTY SNAPSHOT (for variant comparison)
+// ═══════════════════════════════════════════════════════════════════════════
+function seqSnapshot(dna, codons) {
+  const gc = [...dna].filter(n=>n==='G'||n==='C').length;
+  const gcPct = dna.length ? ((gc/dna.length)*100).toFixed(1) : 0;
+  const dg = computeDG5prime(dna);
+  const tai = computeTAI(codons);
+  const thresh = parseInt(document.getElementById('rare-thresh').value)||10;
+  const rareClusters = findRareClusters(codons, thresh);
+  const sdHits = scanInternalSD(dna);
+  const hitNames = Object.entries({...RESTRICT_SITES, ...getCustomSites()}).filter(([,v])=>dna.includes(v)).map(([k])=>k);
+  return { dna, codons, gcPct, dg, tai, rareClusters: rareClusters.length, sdHits: sdHits.length, restrictHits: hitNames.length };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VARIANT COMPARISON CARD
+// ═══════════════════════════════════════════════════════════════════════════
+let _variants = [];
+
+function renderVariantsCard(variants) {
+  _variants = variants;
+  if (variants.length <= 1) { document.getElementById('variants-card').style.display='none'; return; }
+
+  const rows = variants.map((v,i) => {
+    const dgClass = v.dg > -5 ? 'ok' : v.dg > -10 ? '' : 'warn';
+    const taiClass = v.tai >= 0.5 ? 'ok' : v.tai >= 0.3 ? '' : 'warn';
+    const gcClass = (v.gcPct >= 45 && v.gcPct <= 55) ? 'ok' : (v.gcPct >= 30 && v.gcPct <= 70) ? '' : 'warn';
+    const issuesTotal = v.rareClusters + v.sdHits + v.restrictHits;
+    return `<tr>
+      <td><button class="var-select-btn${i===0?' active':''}" id="varbtn-${i}" onclick="selectVariant(${i})">V${i+1}</button></td>
+      <td class="var-mono" style="color:var(--${dgClass==='ok'?'teal-text':dgClass==='warn'?'coral-text':'text-primary'})">${v.dg.toFixed(1)}</td>
+      <td class="var-mono" style="color:var(--${taiClass==='ok'?'teal-text':taiClass==='warn'?'coral-text':'text-primary'})">${v.tai.toFixed(3)}</td>
+      <td class="var-mono" style="color:var(--${gcClass==='ok'?'teal-text':gcClass==='warn'?'coral-text':'text-primary'})">${v.gcPct}%</td>
+      <td class="var-mono" style="color:var(--${issuesTotal===0?'teal-text':issuesTotal<=2?'text-primary':'coral-text'})">${issuesTotal}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('variants-body').innerHTML = `
+    <table class="variants-table">
+      <thead><tr>
+        <th>Variant</th><th>5' ΔG (kcal/mol)</th><th>tAI</th><th>GC%</th><th>Issues</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="info-note" style="margin-top:10px">Click a variant button to load it as the active sequence. Issues = SD sites + rare clusters + restriction hits.</p>`;
+  document.getElementById('variants-card').style.display = 'block';
+}
+
+function selectVariant(idx) {
+  const v = _variants[idx];
+  if (!v) return;
+  // Update active button
+  _variants.forEach((_,i) => { const b=document.getElementById(`varbtn-${i}`); if(b) b.classList.toggle('active', i===idx); });
+  // Load into output
+  renderDNA(v.codons, v.dna);
+  document.getElementById('nt-count').textContent = v.dna.length + ' nt';
+  renderStats(v.dna, v.codons);
+  renderGCChart(v.dna);
+  renderIssuesCard(v.dna, v.codons);
+  renderCodonComparison(v.codons);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NATIVE SEQUENCE COMPARISON
+// ═══════════════════════════════════════════════════════════════════════════
+function renderNativeComparison(optSnap) {
+  const nativeRaw = document.getElementById('native-seq').value.trim().toUpperCase().replace(/\s+/g,'').replace(/T/g,'T');
+  if (!nativeRaw || nativeRaw.length < 9) { document.getElementById('native-card').style.display='none'; return; }
+
+  // Parse native codons (just for tAI; AA identity not checked)
+  const nativeCodons = [];
+  for (let i=0; i<nativeRaw.length-2; i+=3) {
+    const codon = nativeRaw.slice(i,i+3);
+    const aa = Object.keys(CODON_TABLE).find(a => (CODON_TABLE[a]||[]).some(e=>e[0]===codon)) || '?';
+    if (aa !== '*' && aa !== '?') nativeCodons.push({aa, codon});
+  }
+
+  const ngc = [...nativeRaw].filter(c=>c==='G'||c==='C').length;
+  const ngcPct = ((ngc/nativeRaw.length)*100).toFixed(1);
+  const ndg = computeDG5prime(nativeRaw);
+  const ntai = computeTAI(nativeCodons);
+  const nthresh = parseInt(document.getElementById('rare-thresh').value)||10;
+  const nrareCl = findRareClusters(nativeCodons, nthresh).length;
+  const nsd = scanInternalSD(nativeRaw).length;
+
+  function cmp(natVal, optVal, higherBetter) {
+    const better = higherBetter ? optVal > natVal : optVal < natVal;
+    return better ? 'better' : (optVal === natVal ? '' : 'worse');
+  }
+
+  const rows = [
+    ['GC content', `${ngcPct}%`, `${optSnap.gcPct}%`, cmp(parseFloat(ngcPct), parseFloat(optSnap.gcPct), null)],
+    ['5\' ΔG (kcal/mol)', ndg.toFixed(1), optSnap.dg.toFixed(1), cmp(ndg, optSnap.dg, false)],
+    ['tAI', ntai.toFixed(3), optSnap.tai.toFixed(3), cmp(ntai, optSnap.tai, true)],
+    ['SD sites', nsd, optSnap.sdHits, cmp(nsd, optSnap.sdHits, false)],
+    ['Rare codon clusters', nrareCl, optSnap.rareClusters, cmp(nrareCl, optSnap.rareClusters, false)],
+  ];
+
+  const rowsHtml = rows.map(([label, natV, optV, cls]) => `
+    <div class="native-stat">
+      <span class="native-stat-label">${label}</span>
+      <span style="display:flex;gap:20px">
+        <span class="native-stat-val">${natV}</span>
+        <span class="native-stat-val ${cls}">${optV}</span>
+      </span>
+    </div>`).join('');
+
+  document.getElementById('native-body').innerHTML = `
+    <div class="native-compare">
+      <div class="native-col">
+        <div class="native-col-title">Native sequence (${nativeCodons.length} codons)</div>
+        ${rows.map(([label,,, ], i) => `<div class="native-stat"><span class="native-stat-label">${label}</span><span class="native-stat-val">${rows[i][1]}</span></div>`).join('')}
+      </div>
+      <div class="native-col">
+        <div class="native-col-title">Optimized sequence</div>
+        ${rows.map(([label,,,cls], i) => `<div class="native-stat"><span class="native-stat-label">${label}</span><span class="native-stat-val ${cls}">${rows[i][2]}</span></div>`).join('')}
+      </div>
+    </div>
+    <p class="info-note" style="margin-top:10px">Green values in the optimized column indicate improvement over native.</p>`;
+  document.getElementById('native-card').style.display = 'block';
+}
+
+// ── Helper: get custom-excluded codons from UI ──
+function getExcludedCodons() {
+  const val = (document.getElementById('excl-codons')?.value || '').toUpperCase();
+  return new Set(val.split(/[,\s]+/).map(s=>s.trim()).filter(s=>s.length===3));
+}
+
+// ── Helper: get custom restriction sites from UI ──
+function getCustomSites() {
+  const val = (document.getElementById('custom-sites')?.value || '');
+  const result = {};
+  for (const pair of val.split(',')) {
+    const [name, seq] = pair.split(':').map(s=>s.trim());
+    if (name && seq && seq.length >= 4) result[name] = seq.toUpperCase();
+  }
+  return result;
+}
+
+// ── Advanced settings toggle ──
+function toggleAdv() {
+  const body = document.getElementById('adv-body');
+  const arrow = document.getElementById('adv-arrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▴' : '▾';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // RNA 5'-END MFE FOLDING  —  simplified Zuker DP, Turner 2004 parameters
 // Analyses the first 70 nt of the CDS (DNA → RNA, T=U).
 // Returns ΔG37 (kcal/mol). Approximate; use RNAfold for pub-quality results.
@@ -861,11 +1474,11 @@ function computeDG5prime(dna) {
     // ── UG wobble outer × WC inner ──
     UGAU:-0.50, UGUA:-1.00, UGCG:-1.50, UGGC:-1.30,
     // ── WC outer × GU wobble inner ──
-    AAGU:-0.30, AAUG:-0.30, UAGU:-0.30, UAUG:-0.30,
-    CAGU:-2.11, // already above — CG outer, AU inner (not wobble)
-    CAUG:-0.30, GAUG:-0.30, GCUG:-0.30, GCGU:-0.30,
-    // ── GU × GU and UG × UG wobble stacks ──
-    GUGU:-0.50, UGUG:-0.50, GUUG:-0.50, GGUU:-0.50,
+    // ── WC outer × wobble inner (approximate) ──
+    AGUU:-0.30, AUUG:-0.30, CGUU:-0.30, CUUG:-0.30,
+    GGUU:-0.30, GUUG:-0.30,
+    // ── wobble × wobble ──
+    GUGU:-0.50, UGUG:-0.50,
   };
 
   function getStack(i, j) {
@@ -975,7 +1588,7 @@ function renderDNA(codons, dnaSeq) {
   el.dataset.raw=dnaSeq;
 }
 
-function renderStats(dna) {
+function renderStats(dna, codons) {
   const gc=[...dna].filter(n=>n==='G'||n==='C').length;
   const pct=dna.length?((gc/dna.length)*100).toFixed(1):0;
   document.getElementById('stat-len').textContent=dna.length;
@@ -1007,11 +1620,19 @@ function renderStats(dna) {
     const badRuns=findRuns(dna,THRESH);
     hpChips.innerHTML=badRuns.length
       ?badRuns.map(r=>`<span class="restrict-chip">poly-${r.nt}×${r.len}</span>`).join('')
-      :'<span class="restrict-chip-ok">none above threshold</span>';
+      :'<span class="restrict-chip-ok">none</span>';
   } else {
     hpEl.textContent=best?best.len:1;
     hpEl.className='stat-value ok';
-    hpChips.innerHTML='<span class="restrict-chip-ok">none above threshold</span>';
+    hpChips.innerHTML='<span class="restrict-chip-ok">none</span>';
+  }
+
+  // tAI
+  const tai = computeTAI(codons || []);
+  const taiEl = document.getElementById('stat-tai');
+  if (taiEl && tai > 0) {
+    taiEl.textContent = tai.toFixed(3);
+    taiEl.className = 'stat-value ' + (tai>=0.5?'ok':tai>=0.3?'':'warn');
   }
 
   // 5' ΔG via nearest-neighbour RNA folding
@@ -1019,9 +1640,9 @@ function renderStats(dna) {
   const dgEl = document.getElementById('stat-dg5');
   const dgNote = document.getElementById('dg5-note');
   dgEl.textContent = dg.toFixed(1);
-  if (dg > -5)       { dgEl.className='stat-value ok';   dgNote.innerHTML='<span class="restrict-chip-ok">✓ weak — good for translation initiation</span>'; }
-  else if (dg > -10) { dgEl.className='stat-value';       dgNote.innerHTML='<span class="restrict-chip">⚠ moderate — may reduce expression</span>'; }
-  else               { dgEl.className='stat-value warn';  dgNote.innerHTML='<span class="restrict-chip">✗ strong — likely to impede ribosome loading</span>'; }
+  if (dg > -5)       { dgEl.className='stat-value ok';   dgNote.innerHTML='<span class="restrict-chip-ok">✓ weak — good</span>'; }
+  else if (dg > -10) { dgEl.className='stat-value';       dgNote.innerHTML='<span class="restrict-chip">⚠ moderate</span>'; }
+  else               { dgEl.className='stat-value warn';  dgNote.innerHTML='<span class="restrict-chip">✗ strong structure</span>'; }
 }
 
 function renderAAStrip(seq) {
@@ -1107,13 +1728,16 @@ function clearAll() {
   document.getElementById('dna-output').innerHTML='<span class="placeholder-msg">Optimized coding sequence will appear here…</span>';
   document.getElementById('dna-output').dataset.raw='';
   document.getElementById('stats-strip').classList.remove('show');
-  document.getElementById('aa-annot-card').style.display='none';
-  document.getElementById('codon-cmp-card').style.display='none';
+  ['aa-annot-card','codon-cmp-card','gc-chart-card','issues-card','variants-card','native-card']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   document.getElementById('aa-count').textContent='0 aa';
   document.getElementById('nt-count').textContent='0 nt';
   document.getElementById('error-msg').classList.remove('show');
   document.getElementById('stat-dg5').textContent='—';
   document.getElementById('dg5-note').innerHTML='';
+  document.getElementById('stat-tai').textContent='—';
+  const ic = document.getElementById('issues-count'); if(ic) ic.textContent='';
+  _variants = [];
 }
 function loadExample() {
   document.getElementById('aa-input').value='MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK';
